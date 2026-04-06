@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NFL x Havas Play — Consultative Strategic Deck</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;500;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+:root{
+  --black:#050505;
+  --dark:#0D0F1A;
+  --white:#F0EEE8;
+  --text:#F0EEE8;
+  --muted:rgba(240,238,232,.55);
+  --line:rgba(255,255,255,.08);
+  --line2:rgba(123,79,255,.24);
+  --purple:#7B4FFF;
+  --purple-light:#9D77FF;
+  --fuchsia:#C8177A;
+  --yellow:#F5E642;
+  --max:1320px;
+  --shadow:0 24px 70px rgba(0,0,0,.38);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{
+  margin:0;
+  min-height:100%;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(123,79,255,.16), transparent 22%),
+    radial-gradient(circle at 82% 14%, rgba(245,230,66,.10), transparent 18%),
+    radial-gradient(circle at 72% 82%, rgba(200,23,122,.11), transparent 20%),
+    linear-gradient(180deg,#050505 0%, #0D0F1A 100%);
+  color:var(--text);
+  font-family:"Syne",system-ui,sans-serif;
+  overflow:hidden;
+}
+body::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  background-image:
+    linear-gradient(rgba(123,79,255,.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(123,79,255,.05) 1px, transparent 1px);
+  background-size:80px 80px;
+  mask-image:radial-gradient(circle at center, black 55%, transparent 100%);
+  opacity:.45;
+}
+.deck{
+  width:100vw;
+  height:100vh;
+  position:relative;
+  overflow:hidden;
+  background:linear-gradient(180deg, rgba(255,255,255,.01), rgba(255,255,255,0));
+}
+.noise{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  opacity:.06;
+  background-image:linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+  background-size:24px 24px;
+  mix-blend-mode:soft-light;
+}
+.slide{position:absolute;inset:0;display:none;padding:40px 48px 28px}
+.slide.active{display:flex}
+.inner{
+  width:100%;
+  max-width:var(--max);
+  margin:0 auto;
+  height:100%;
+  display:flex;
+  flex-direction:column;
+  gap:22px;
+}
+.topbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:20px;
+  font-family:"DM Mono", monospace;
+  font-size:11px;
+  color:rgba(240,238,232,.45);
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  padding-top:8px;
+}
+.brand strong{color:var(--white);font-weight:400}
+.eyebrow{
+  font-family:"DM Mono", monospace;
+  color:var(--yellow);
+  text-transform:uppercase;
+  letter-spacing:.32em;
+  font-size:10px;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.eyebrow::before{content:"";display:inline-block;width:24px;height:1px;background:var(--yellow)}
+.title{
+  margin:0;
+  font-family:"Bebas Neue", sans-serif;
+  font-size:min(8.8vw, 88px);
+  line-height:.92;
+  letter-spacing:.02em;
+  max-width:1150px;
+  text-wrap:balance;
+}
+.subtitle{max-width:960px;font-size:23px;line-height:1.34;color:rgba(240,238,232,.74)}
+.accent{color:var(--yellow)}
+.accent-red{color:var(--fuchsia)}
+.muted{color:var(--muted)}
+.quote{
+  max-width:980px;
+  font-size:24px;
+  line-height:1.3;
+  border-left:3px solid var(--purple);
+  background:rgba(123,79,255,.10);
+  border-radius:0;
+  padding:20px 24px;
+  box-shadow:none;
+}
+.grid{display:grid;gap:18px}
+.g2{grid-template-columns:1.08fr .92fr}
+.g4{grid-template-columns:repeat(4,1fr)}
+.card,.contrast,.pillar,.market,.step,.outcome{
+  position:relative;
+  background:linear-gradient(180deg, rgba(255,255,255,.035), rgba(255,255,255,.01));
+  border:1px solid var(--line);
+  border-radius:0;
+  padding:22px;
+  box-shadow:none;
+  overflow:hidden;
+}
+.card::before,.contrast::before,.pillar::before,.market::before,.step::before,.outcome::before{
+  content:"";
+  position:absolute;
+  left:0;right:0;top:0;height:3px;
+  background:linear-gradient(90deg,var(--purple), var(--yellow));
+  opacity:.9;
+}
+.split-list .contrast:nth-child(odd)::before,
+.pillar-grid .pillar:nth-child(odd)::before,
+.outcome-grid .outcome:nth-child(odd)::before,
+.why-grid .card:nth-child(odd)::before{background:linear-gradient(90deg,var(--purple), var(--fuchsia));}
+.split-list .contrast:nth-child(even)::before,
+.pillar-grid .pillar:nth-child(even)::before,
+.outcome-grid .outcome:nth-child(even)::before,
+.why-grid .card:nth-child(even)::before{background:linear-gradient(90deg,var(--fuchsia), var(--yellow));}
+.card h3,.market h3,.step h3{margin:0 0 10px 0;font-family:"Bebas Neue", sans-serif;font-size:32px;letter-spacing:.03em}
+.contrast h4,.pillar h4,.outcome h4{margin:0 0 10px 0;font-family:"Bebas Neue", sans-serif;font-size:28px;letter-spacing:.03em}
+.card p,.card li,.contrast p,.pillar p,.market p,.step p,.outcome p{font-size:16px;line-height:1.58;color:rgba(240,238,232,.76)}
+ul{margin:10px 0 0 18px;padding:0}
+.hero{display:grid;grid-template-columns:1.15fr .85fr;gap:22px;align-items:end;margin-top:auto}
+.center-stack{display:flex;flex-direction:column;justify-content:center;height:100%;gap:6px}
+.hero-graphic{
+  height:100%;
+  min-height:360px;
+  border-radius:0;
+  border:1px solid var(--line2);
+  background:
+    radial-gradient(circle at 72% 22%, rgba(245,230,66,.14), transparent 18%),
+    radial-gradient(circle at 24% 74%, rgba(200,23,122,.16), transparent 24%),
+    radial-gradient(circle at 55% 55%, rgba(123,79,255,.18), transparent 22%),
+    linear-gradient(135deg, rgba(123,79,255,.06), rgba(255,255,255,.01));
+  position:relative;
+  overflow:hidden;
+}
+.orb{position:absolute;border-radius:50%}
+.o1{width:260px;height:260px;left:-70px;bottom:-70px;background:radial-gradient(circle, rgba(123,79,255,.36), rgba(123,79,255,.03) 65%, transparent 72%)}
+.o2{width:220px;height:220px;right:-40px;top:-30px;background:radial-gradient(circle, rgba(245,230,66,.28), rgba(245,230,66,.03) 65%, transparent 72%)}
+.o3{width:180px;height:180px;left:42%;top:30%;background:radial-gradient(circle, rgba(200,23,122,.26), rgba(200,23,122,.04) 65%, transparent 72%)}
+.wire{position:absolute;inset:24px;border:1px solid rgba(123,79,255,.18)}
+.wire:before,.wire:after{content:"";position:absolute;inset:18px;border:1px solid rgba(255,255,255,.05)}
+.mini-label,.badge{
+  display:inline-block;
+  font-family:"DM Mono", monospace;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.2em;
+  padding:8px 10px;
+  border:1px solid rgba(123,79,255,.35);
+  border-radius:0;
+  color:var(--purple-light);
+  background:rgba(123,79,255,.08);
+}
+.mini-label{position:absolute;backdrop-filter:blur(6px)}
+.ml1{left:30px;top:34px}.ml2{right:26px;top:96px}.ml3{left:54px;bottom:40px}.ml4{right:40px;bottom:48px}
+.split-list{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.pillar-grid,.step-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.market-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.market{min-height:330px;padding:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.015))}
+.market .highlight{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08);font-size:18px;color:var(--white)}
+.step{min-height:250px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.012))}
+.step::after{
+  content:"";
+  position:absolute;
+  width:150px;height:150px;right:-30px;top:-30px;
+  background:radial-gradient(circle, rgba(123,79,255,.12), transparent 66%);
+}
+.num{font-family:"Bebas Neue", sans-serif;font-size:50px;line-height:.9;color:var(--purple-light);margin-bottom:10px}
+.outcome-grid,.why-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+.why-grid{grid-template-columns:repeat(3,1fr)}
+.closing-center{display:flex;flex-direction:column;justify-content:center;height:100%;gap:8px}
+.closing-line{font-family:"Bebas Neue", sans-serif;font-size:min(10.6vw, 98px);line-height:.9;letter-spacing:.02em;max-width:1100px}
+.footer{
+  margin-top:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  font-family:"DM Mono", monospace;
+  font-size:10px;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:rgba(240,238,232,.38)
+}
+.progress{flex:1;max-width:340px;height:3px;overflow:hidden;background:rgba(255,255,255,.08)}
+.progress span{display:block;height:100%;background:linear-gradient(90deg, var(--purple), var(--yellow));width:0%}
+.index{color:rgba(240,238,232,.55)}
+strong{color:var(--white)}
+@media (max-width:1100px){
+  html,body,.deck{overflow:auto;height:auto}
+  .slide{position:relative;display:flex;padding:28px 20px 24px}
+  .deck{display:flex;flex-direction:column}
+  .hero,.g2,.split-list,.pillar-grid,.market-grid,.step-grid,.outcome-grid,.why-grid{grid-template-columns:1fr}
+  .title,.closing-line{font-size:56px}
+  .slide{overflow:auto}
+  body::before{position:absolute}
+}
+</style>
+</head>
+<body>
+<div class="deck"><div class="noise"></div>
+
+<section class="slide active"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">01 / 11</div></div>
+<div class="eyebrow">Opening</div>
+<div class="hero">
+<div class="center-stack">
+<h1 class="title">THE NFL CANNOT BE TRULY GLOBAL IF IT IS NOT <span class="accent">LOCALLY RELEVANT FIRST</span></h1>
+<div class="subtitle">This is not about exporting the sport. It’s about building a local culture around it.</div>
+<div class="quote"><strong>Global expansion is not just a distribution challenge.<br>It is a cultural adoption challenge.</strong></div>
+<div class="subtitle">People don’t become fans because they understand the game. They become fans when the game becomes part of their world.</div>
+</div>
+<div class="hero-graphic"><div class="wire"></div><div class="orb o1"></div><div class="orb o2"></div><div class="orb o3"></div><div class="mini-label ml1">Sport</div><div class="mini-label ml2">Culture</div><div class="mini-label ml3">Communities</div><div class="mini-label ml4">Belonging</div></div>
+</div>
+<div class="footer"><div>Consultative strategic narrative</div><div class="progress"><span style="width:9%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">02 / 11</div></div>
+<div class="eyebrow">The tension</div>
+<h2 class="title">YOU CAN BROADCAST THE GAME. <span class="accent-red">BUT YOU CAN’T BROADCAST FANDOM.</span></h2>
+<div class="grid g2">
+<div class="card"><h3>What the NFL already has</h3><ul><li>Global visibility and iconic assets</li><li>Major event power and spectacle</li><li>Stories, rituals, personalities and entertainment value</li><li>Momentum through international games and global ambition</li></ul></div>
+<div class="split-list">
+<div class="contrast"><h4>Reach ≠ Relevance</h4><p>Being visible in a market doesn’t mean being meaningful in that market.</p></div>
+<div class="contrast"><h4>Access ≠ Adoption</h4><p>Making the game available doesn’t mean people will choose to engage with it.</p></div>
+<div class="contrast"><h4>Understanding ≠ Connection</h4><p>Explaining the rules can reduce distance, but it rarely builds attachment.</p></div>
+<div class="contrast"><h4>The real question</h4><p>Not whether people can watch the NFL, but whether they find a reason to care.</p></div>
+</div></div>
+<div class="footer"><div>From exposure to emotional connection</div><div class="progress"><span style="width:18%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">03 / 11</div></div>
+<div class="eyebrow">Core truth</div>
+<h2 class="title">PEOPLE DON’T ADOPT SPORTS. <span class="accent">THEY ADOPT MEANING.</span></h2>
+<div class="subtitle">Fandom is not built through knowledge. It is built through identity, behaviour and cultural connection.</div>
+<div class="pillar-grid">
+<div class="pillar"><h4>Identity</h4><p>What following the NFL says about me.</p></div>
+<div class="pillar"><h4>Ritual</h4><p>When and how it fits into my life.</p></div>
+<div class="pillar"><h4>Community</h4><p>Who I share it with.</p></div>
+<div class="pillar"><h4>Conversation</h4><p>How it shows up in my social world.</p></div>
+</div>
+<div class="quote">Understanding the game can create interest. <span class="accent">Feeling part of it creates fans.</span></div>
+<div class="footer"><div>Fandom starts with cultural fit</div><div class="progress"><span style="width:27%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">04 / 11</div></div>
+<div class="eyebrow">Reframe</div>
+<h2 class="title">FROM GLOBAL EXPANSION <span class="accent">TO LOCAL CULTURAL ADOPTION</span></h2>
+<div class="grid g2">
+<div class="card"><h3>This is not about</h3><p>Reaching more people</p><p>Explaining the game better</p><p>Increasing visibility</p></div>
+<div class="card"><h3>This is about</h3><p>Becoming part of local culture</p><p>Creating reasons to care</p><p>Building everyday relevance</p></div>
+</div>
+<div class="quote">Before defining solutions, the key question is: <span class="accent">where, how and through whom can the NFL become locally meaningful?</span></div>
+<div class="footer"><div>Reframing the opportunity</div><div class="progress"><span style="width:36%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">05 / 11</div></div>
+<div class="eyebrow">Entry logic</div>
+<h2 class="title">FANDOM IS NOT <span class="accent">BUILT IN ONE WAY</span></h2>
+<div class="subtitle">People connect with the same sport in very different ways. And those connections are not always driven by the sport itself.</div>
+<div class="pillar-grid">
+<div class="pillar"><h4>Competition</h4><p>For some, the first hook is the game itself.</p></div>
+<div class="pillar"><h4>Entertainment</h4><p>For others, it starts with spectacle, story and shared moments.</p></div>
+<div class="pillar"><h4>Identity & culture</h4><p>Style, codes, communities and cultural expression can be stronger first doors.</p></div>
+<div class="pillar"><h4>Ecosystem</h4><p>Media, creators, brands and experiences all shape how fandom is built.</p></div>
+</div>
+<div class="quote">The opportunity is not to define one path to fandom, but to design <span class="accent">multiple ways into it.</span></div>
+<div class="footer"><div>Multiple doors into the same fandom ecosystem</div><div class="progress"><span style="width:45%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">06 / 11</div></div>
+<div class="eyebrow">Market strategy</div>
+<h2 class="title">NOT ALL MARKETS REQUIRE <span class="accent">THE SAME STRATEGY</span></h2>
+<div class="subtitle">Different levels of maturity demand different roles, priorities and growth paths.</div>
+<div class="market-grid">
+<div class="market">
+<div class="badge">Mature / existing fandom</div>
+<h3>Mature markets</h3>
+<p><strong>Examples:</strong> Germany, Mexico, UK</p>
+<p><strong>Context:</strong> Existing fan base, stronger understanding of the game, higher historical exposure, but risk of stagnation or ageing audience.</p>
+<p><strong>Strategic role:</strong> Re-energise and expand relevance. Bring the NFL closer to new generations and move from passive consumption to cultural participation.</p>
+<p><strong>Focus:</strong> Culture as a rejuvenation engine. Entertainment, creators, lifestyle integration and new rituals.</p>
+<div class="highlight">Relevance is not built by explaining more. It is built by evolving what the NFL means today.</div>
+</div>
+<div class="market">
+<div class="badge">Early stage / low familiarity</div>
+<h3>Emerging markets</h3>
+<p><strong>Examples:</strong> Spain, France, Italy</p>
+<p><strong>Context:</strong> Lower understanding of the sport, limited organic demand, but strong openness to culture, trends, creators and entertainment.</p>
+<p><strong>Strategic role:</strong> Create first meaningful entry points. Turn curiosity into initial adoption and build fandom from the outside in.</p>
+<p><strong>Focus:</strong> Culture as an entry point, not amplification. Lifestyle, entertainment, social ecosystems and participation before deep understanding.</p>
+<div class="highlight">People don’t enter through the rules. They enter through culture.</div>
+</div></div>
+<div class="quote">A single global strategy will not unlock growth. <span class="accent">A market-by-market cultural approach will.</span></div>
+<div class="footer"><div>Two maturity clusters, two strategic roles</div><div class="progress"><span style="width:55%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">07 / 11</div></div>
+<div class="eyebrow">Commercial value</div>
+<h2 class="title">BRANDS DON’T CONNECT WITH FANS. <span class="accent">THEY CONNECT WITH COMMUNITIES.</span></h2>
+<div class="grid g2">
+<div class="card"><h3>For brands, value is not created by scale alone</h3><p>It is created by relevance inside the right cultural spaces.</p><ul><li>Not just audiences, but meaning</li><li>Not just visibility, but cultural association</li><li>Not just reach, but credibility within specific communities</li></ul></div>
+<div class="card"><h3>What this means for the NFL</h3><p>The stronger the NFL becomes within different cultural communities, the more valuable it becomes as a platform for brands.</p><div class="quote" style="margin-top:16px">Growing fandom is not only a fan challenge. It is also a <span class="accent">sponsorship opportunity multiplier.</span></div></div>
+</div>
+<div class="footer"><div>Cultural relevance grows commercial relevance</div><div class="progress"><span style="width:64%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">08 / 11</div></div>
+<div class="eyebrow">Our approach</div>
+<h2 class="title">FROM CULTURAL UNDERSTANDING <span class="accent">TO FAN ADOPTION</span></h2>
+<div class="step-grid">
+<div class="step"><div class="num">01</div><h3>Understand the culture</h3><p>Market context, behaviours, passions, social dynamics, barriers and motivations.</p></div>
+<div class="step"><div class="num">02</div><h3>Identify entry points</h3><p>Which communities matter most, how the NFL can be relevant to them, and through which territories.</p></div>
+<div class="step"><div class="num">03</div><h3>Activate and learn</h3><p>Pilot initiatives through creators, partners, experiences and a test-and-learn mindset.</p></div>
+<div class="step"><div class="num">04</div><h3>Scale what works</h3><p>Build repeatable models, a global playbook and local adaptation rules.</p></div>
+</div>
+<div class="outcome-grid">
+<div class="outcome"><h4>Understand the culture</h4><p>Map behaviours, barriers and motivations. Identify where cultural relevance already exists.</p></div>
+<div class="outcome"><h4>Identify entry points</h4><p>Prioritise the most relevant communities, territories and partner ecosystems by market.</p></div>
+<div class="outcome"><h4>Activate and learn</h4><p>Launch focused pilots, test resonance and gather real signals before over-investing.</p></div>
+<div class="outcome"><h4>Scale what works</h4><p>Turn learnings into repeatable playbooks, local guidelines and scalable growth frameworks.</p></div>
+</div>
+<div class="quote">Not a single campaign, but a <span class="accent">system to build relevance over time.</span></div>
+<div class="footer"><div>Framework first, execution second</div><div class="progress"><span style="width:73%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">09 / 11</div></div>
+<div class="eyebrow">What this unlocks</div>
+<h2 class="title">BEYOND VISIBILITY: <span class="accent">BUILDING REAL ADOPTION</span></h2>
+<div class="grid g2">
+<div class="card"><h3>Traditional approach</h3><ul><li>Scales awareness</li><li>Maximises reach</li><li>Focuses on broadcasting the game</li></ul></div>
+<div class="card"><h3>Cultural approach</h3><ul><li>Builds relevance</li><li>Creates reasons to care</li><li>Embeds the NFL into people’s lives</li></ul></div>
+</div>
+<div class="outcome-grid">
+<div class="outcome"><h4>Faster, smarter learning</h4><p>Instead of large upfront bets, growth is built through pilots and real market feedback.</p></div>
+<div class="outcome"><h4>Local relevance with global consistency</h4><p>A flexible model that adapts by market while keeping a coherent overall vision.</p></div>
+<div class="outcome"><h4>Stronger cultural connection</h4><p>Moving from passive awareness to active participation and belonging.</p></div>
+<div class="outcome"><h4>Greater commercial potential</h4><p>A more culturally relevant NFL becomes a more attractive platform for brands and partners.</p></div>
+</div>
+<div class="quote">Visibility can grow the audience. <span class="accent">Relevance is what builds fans.</span></div>
+<div class="footer"><div>Media matters, but it is not enough on its own</div><div class="progress"><span style="width:82%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">10 / 11</div></div>
+<div class="eyebrow">Why Havas Play</div>
+<h2 class="title">WHY HAVAS PLAY <span class="accent">IS BUILT FOR THIS</span></h2>
+<div class="quote"><strong>This is not a media challenge.<br>This is not a traditional sponsorship challenge.<br>It is a cultural relevance challenge.</strong></div>
+<div class="why-grid">
+<div class="card"><h3>How we think</h3><p><strong>We don’t start from channels. We start from culture.</strong></p><ul><li>We identify where meaning is created</li><li>We understand communities, not just audiences</li><li>We decode behaviours, not just demographics</li></ul></div>
+<div class="card"><h3>How we work</h3><p><strong>We don’t build campaigns. We build ecosystems.</strong></p><ul><li>Creators, communities, experiences, media and partnerships working together</li><li>From isolated activations to connected systems</li><li>From short-term visibility to long-term adoption</li></ul></div>
+<div class="card"><h3>How we scale</h3><p><strong>We don’t replicate. We adapt.</strong></p><ul><li>Global framework, locally executed</li><li>Governance with local flexibility</li><li>Designed market by market, not one-size-fits-all</li></ul></div>
+</div>
+<div class="quote">The opportunity is not to make more people watch the NFL. <span class="accent">It is to make more people feel part of it.</span></div>
+<div class="footer"><div>Why this sits naturally in Havas Play’s territory</div><div class="progress"><span style="width:91%"></span></div></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+<div class="topbar"><div class="brand"><strong>HAVAS PLAY</strong> × NFL</div><div class="index">11 / 11</div></div>
+<div class="eyebrow">Closing</div>
+<div class="closing-center">
+<div class="closing-line">We don’t help brands enter culture.</div>
+<div class="closing-line"><span class="accent">We help them become part of it.</span></div>
+<div class="subtitle">This is Havas Play</div>
+</div>
+<div class="footer"><div>Use ← →, Space, or click left/right to navigate</div><div class="progress"><span style="width:100%"></span></div></div>
+</div></section>
+
+</div>
+<script>
+const slides = Array.from(document.querySelectorAll('.slide')); let current = 0;
+function showSlide(index){current = Math.max(0, Math.min(index, slides.length - 1)); slides.forEach((s,i)=>s.classList.toggle('active', i===current));}
+document.addEventListener('keydown', e => {if (window.innerWidth <= 1100) return; if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') showSlide(current + 1); if (e.key === 'ArrowLeft' || e.key === 'PageUp') showSlide(current - 1); if (e.key === 'Home') showSlide(0); if (e.key === 'End') showSlide(slides.length - 1);});
+document.addEventListener('click', e => {if (window.innerWidth <= 1100) return; const x = e.clientX / window.innerWidth; showSlide(x > 0.5 ? current + 1 : current - 1);});
+showSlide(0);
+</script>
+</body>
+</html>
