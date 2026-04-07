@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Decathlon x Havas Play</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:'Syne',sans-serif;overflow-x:hidden;cursor:none;}
+:root{--black:#050505;--dark:#0D0F1A;--gray:#1A1A1A;--purple:#7B4FFF;--purple-light:#9D77FF;--fuchsia:#C8177A;--yellow:#F5E642;--white:#F0EEE8;}
+
+/* CURSOR */
+.cursor{position:fixed;width:12px;height:12px;background:var(--yellow);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .3s,height .3s;mix-blend-mode:difference;}
+.cursor-follower{position:fixed;width:40px;height:40px;border:1px solid rgba(123,79,255,.6);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:all .15s ease;}
+
+/* PRELOADER */
+#preloader{position:fixed;inset:0;background:var(--black);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:24px;transition:opacity .8s ease,visibility .8s ease;}
+#preloader.hidden{opacity:0;visibility:hidden;pointer-events:none;}
+.pl-logo{font-family:'Bebas Neue',cursive;font-size:clamp(60px,12vw,120px);letter-spacing:.05em;background:linear-gradient(135deg,var(--purple),var(--yellow));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:pulseLogo 1.2s ease-in-out infinite alternate;}
+@keyframes pulseLogo{from{opacity:.4}to{opacity:1}}
+.pl-sub{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.3em;color:rgba(255,255,255,.4);text-transform:uppercase;}
+.pl-bar{width:200px;height:2px;background:var(--gray);overflow:hidden;}
+.pl-progress{height:100%;background:linear-gradient(90deg,var(--purple),var(--yellow));width:0;animation:loadBar 2.2s ease forwards;}
+@keyframes loadBar{to{width:100%}}
+
+/* PROGRESS BAR */
+#progress-bar{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--purple),var(--yellow));z-index:1000;transition:width .1s linear;width:0%;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;padding:28px 48px;display:flex;justify-content:space-between;align-items:center;z-index:500;}
+.nav-logo{font-family:'Bebas Neue',cursive;font-size:20px;letter-spacing:.12em;color:var(--white);text-decoration:none;}
+.nav-logo span{color:var(--purple);}
+.nav-right{display:flex;align-items:center;gap:20px;}
+.nav-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.25em;color:rgba(255,255,255,.3);text-transform:uppercase;}
+.nav-dots{display:flex;gap:6px;}
+.nav-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.2);cursor:pointer;transition:all .3s ease;}
+.nav-dot.active{background:var(--yellow);transform:scale(1.5);}
+
+/* SCROLL HINT */
+#scroll-hint{position:fixed;bottom:36px;right:48px;display:flex;align-items:center;gap:12px;opacity:1;transition:opacity .5s ease;z-index:500;}
+#scroll-hint.hidden{opacity:0;pointer-events:none;}
+.hint-text{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.25em;color:rgba(255,255,255,.4);text-transform:uppercase;}
+.hint-arrow{display:flex;gap:4px;animation:arrowPulse 1.5s ease infinite;}
+@keyframes arrowPulse{0%,100%{opacity:.3;transform:translateX(0)}50%{opacity:1;transform:translateX(6px)}}
+.hint-arrow span{width:6px;height:6px;border-right:1.5px solid var(--yellow);border-top:1.5px solid var(--yellow);transform:rotate(45deg);}
+
+/* LAYOUT */
+#scroll-container{display:flex;height:100vh;overflow:hidden;}
+#panels-wrapper{display:flex;height:100vh;will-change:transform;}
+.panel{min-width:100vw;height:100vh;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;}
+
+/* REVEAL */
+.reveal-el{opacity:0;transform:translateY(24px);transition:opacity .6s ease,transform .6s ease;}
+.reveal-el.revealed{opacity:1;transform:translateY(0);}
+
+/* PANEL LABEL */
+.panel-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.4em;color:var(--yellow);text-transform:uppercase;margin-bottom:20px;display:flex;align-items:center;gap:12px;}
+.panel-label::before{content:'';display:inline-block;width:24px;height:1px;background:var(--yellow);}
+
+/* TAGS */
+.tag{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.15em;padding:4px 10px;border:1px solid rgba(123,79,255,.35);color:var(--purple-light);text-transform:uppercase;display:inline-block;margin:3px;}
+.tag.fuchsia{border-color:rgba(200,23,122,.4);color:#E05BA0;}
+.tag.yellow{border-color:rgba(245,230,66,.35);color:var(--yellow);}
+
+/* BG ANIMATIONS */
+@keyframes gridMove{from{background-position:0 0}to{background-position:80px 80px}}
+@keyframes orbPulse{from{transform:translate(-50%,-50%) scale(.9);opacity:.6}to{transform:translate(-50%,-50%) scale(1.1);opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scrollLine{0%,100%{transform:scaleY(1);opacity:.4}50%{transform:scaleY(.5);opacity:1}}
+
+/* ══ COVER ══ */
+.panel-cover{background:var(--dark);}
+.cover-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(123,79,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(123,79,255,.06) 1px,transparent 1px);background-size:80px 80px;animation:gridMove 20s linear infinite;}
+.cover-orb{position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(123,79,255,.2) 0%,transparent 70%);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);animation:orbPulse 4s ease-in-out infinite alternate;}
+.cover-content{position:relative;z-index:2;text-align:center;max-width:1100px;padding:0 60px;}
+.cover-eyebrow{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.4em;color:var(--purple-light);text-transform:uppercase;margin-bottom:32px;opacity:0;animation:fadeUp .8s ease 2.5s forwards;}
+.cover-headline{font-family:'Bebas Neue',cursive;font-size:clamp(64px,11vw,130px);line-height:.92;letter-spacing:.02em;margin-bottom:36px;opacity:0;animation:fadeUp .8s ease 2.7s forwards;}
+.cover-headline .hl-purple{color:var(--purple);}
+.cover-headline .hl-yellow{color:var(--yellow);}
+.cover-meta{display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap;opacity:0;animation:fadeUp .8s ease 2.9s forwards;margin-bottom:48px;}
+.cover-meta-item{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.2em;color:rgba(255,255,255,.4);text-transform:uppercase;}
+.cover-meta-item strong{color:var(--white);font-family:'Syne',sans-serif;font-size:13px;}
+.cover-meta-sep{width:1px;height:28px;background:rgba(255,255,255,.12);}
+.cover-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;opacity:0;animation:fadeUp .8s ease 3.1s forwards;}
+.cover-badge{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding:8px 18px;border:1px solid rgba(123,79,255,.4);color:var(--purple-light);clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px));}
+.cover-scroll-cta{position:absolute;bottom:40px;left:50%;transform:translateX(-50%);font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3em;color:rgba(255,255,255,.25);text-transform:uppercase;opacity:0;animation:fadeUp .8s ease 3.4s forwards;display:flex;flex-direction:column;align-items:center;gap:10px;cursor:pointer;}
+.cover-scroll-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--purple),transparent);animation:scrollLine 2s ease-in-out infinite;}
+
+/* ══ QUOTE ══ */
+.panel-quote{background:var(--dark);}
+.quote-grid{position:absolute;inset:0;background-image:linear-gradient(rgba(123,79,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(123,79,255,.04) 1px,transparent 1px);background-size:80px 80px;animation:gridMove 20s linear infinite;}
+.quote-orb{position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(123,79,255,.15) 0%,transparent 70%);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);animation:orbPulse 5s ease-in-out infinite alternate;}
+.quote-inner{position:relative;z-index:2;text-align:center;max-width:900px;padding:0 80px;}
+.quote-mark{font-family:'Bebas Neue',cursive;font-size:120px;color:var(--purple);line-height:.6;display:block;margin-bottom:16px;opacity:.35;}
+.quote-text{font-family:'Syne',sans-serif;font-size:clamp(24px,3.2vw,42px);font-weight:700;line-height:1.25;color:var(--white);margin-bottom:40px;letter-spacing:-.01em;}
+.quote-text .hl-purple{color:var(--purple-light);}
+.quote-text .hl-yellow{color:var(--yellow);}
+.quote-text .hl-fuchsia{color:var(--fuchsia);}
+.quote-divider{width:48px;height:2px;background:linear-gradient(90deg,var(--purple),var(--fuchsia));margin:0 auto 32px;}
+.quote-attribution{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.35);}
+
+/* ══ PANEL 2 — HAVAS PLAY (custom split) ══ */
+.panel-hp{background:#070711;}
+.hp-split{display:grid;grid-template-columns:1fr 1fr;width:100%;height:100%;}
+.hp-left{background:var(--dark);display:flex;align-items:center;justify-content:center;padding:80px 60px;border-right:1px solid rgba(123,79,255,.2);position:relative;overflow:hidden;}
+.hp-left::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(123,79,255,.03) 4px,rgba(123,79,255,.03) 8px);}
+.hp-left-inner{position:relative;z-index:2;text-align:center;width:100%;}
+.hp-left-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.4em;color:var(--yellow);text-transform:uppercase;margin-bottom:32px;display:flex;align-items:center;gap:12px;justify-content:center;}
+.hp-left-label::before{content:'';display:inline-block;width:24px;height:1px;background:var(--yellow);}
+.hp-from{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.35em;color:rgba(255,255,255,.35);text-transform:uppercase;margin-bottom:12px;}
+.hp-big-word{font-family:'Bebas Neue',cursive;font-size:clamp(48px,7vw,88px);color:transparent;-webkit-text-stroke:2px var(--purple);line-height:.95;display:block;margin-bottom:6px;}
+.hp-arrow{font-family:'Bebas Neue',cursive;font-size:clamp(28px,3.5vw,44px);color:var(--yellow);display:block;margin:6px 0;}
+.hp-to-word{font-family:'Bebas Neue',cursive;font-size:clamp(48px,7vw,88px);color:var(--purple);line-height:.95;display:block;}
+.hp-shifts{display:flex;flex-direction:column;gap:10px;margin-top:28px;text-align:left;}
+.hp-shift{display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(123,79,255,.1);border:1px solid rgba(123,79,255,.2);}
+.hp-shift-lbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.4);min-width:90px;}
+.hp-shift-val{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--white);}
+.hp-shift-arr{font-family:'DM Mono',monospace;font-size:14px;color:var(--yellow);margin-left:auto;flex-shrink:0;}
+.hp-right{display:flex;align-items:center;padding:80px 60px;background:#070711;}
+.hp-block{max-width:480px;}
+.hp-headline{font-family:'Bebas Neue',cursive;font-size:clamp(36px,4.5vw,64px);line-height:1;margin-bottom:24px;letter-spacing:.02em;}
+.hp-headline em{color:var(--purple);font-style:normal;}
+.hp-body{font-size:17px;line-height:1.85;color:rgba(240,238,232,.6);margin-bottom:20px;}
+.hp-stmt{font-size:16px;line-height:1.8;color:var(--white);padding:16px 22px;background:rgba(123,79,255,.1);border-left:3px solid var(--purple);margin:18px 0;font-style:italic;}
+.hp-stmt span{color:var(--purple-light);}
+.hp-alert{background:rgba(200,23,122,.1);border:1px solid rgba(200,23,122,.25);border-left:3px solid var(--fuchsia);padding:16px 20px;}
+.hp-alert p{font-size:15px;line-height:1.75;color:rgba(240,238,232,.8);}
+.hp-alert p strong{color:var(--fuchsia);}
+
+/* ══ WHITE STATS ══ */
+.panel-white-problem{background:#f5f5f0;color:#050505;}
+.wp-inner{max-width:1200px;width:100%;padding:0 80px;display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;}
+.wp-label{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;letter-spacing:.4em;text-transform:uppercase;color:var(--purple);margin-bottom:32px;}
+.wp-statement{font-family:'Bebas Neue',cursive;font-size:clamp(3rem,6vw,5.5rem);line-height:.95;color:#050505;}
+.wp-statement .highlight{color:var(--purple);}
+.wp-right{display:flex;flex-direction:column;gap:28px;}
+.wp-stat-block{border-left:3px solid var(--purple);padding-left:28px;}
+.wp-stat-number{font-family:'Bebas Neue',cursive;font-size:3.8rem;color:var(--purple);line-height:1;}
+.wp-stat-desc{font-size:1rem;color:rgba(5,5,5,.7);margin-top:4px;line-height:1.6;}
+
+/* ══ CHALLENGE CARDS ══ */
+.panel-challenge{background:#060610;}
+.ch-outer{width:100%;height:100%;display:grid;grid-template-columns:270px 1fr;}
+.ch-left{padding:72px 40px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(255,255,255,.06);background:var(--dark);}
+.ch-headline{font-family:'Bebas Neue',cursive;font-size:clamp(36px,4.8vw,62px);line-height:.95;letter-spacing:.02em;margin-bottom:20px;}
+.ch-headline em{color:var(--fuchsia);font-style:normal;}
+.ch-sub{font-size:16px;line-height:1.8;color:rgba(240,238,232,.45);margin-bottom:24px;}
+.ch-note{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;color:var(--fuchsia);line-height:1.6;padding:14px 18px;background:rgba(200,23,122,.1);border-left:2px solid var(--fuchsia);}
+.ch-right{padding:48px 48px;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr auto;gap:1px;background:rgba(255,255,255,.05);}
+.ch-card{background:#060610;padding:28px 22px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:background .3s;}
+.ch-card:hover{background:rgba(123,79,255,.07);}
+.ch-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.ch-card.c1::before{background:var(--fuchsia);}
+.ch-card.c2::before{background:var(--purple);}
+.ch-card.c3::before{background:var(--yellow);}
+.ch-num{font-family:'Bebas Neue',cursive;font-size:12px;letter-spacing:.15em;margin-bottom:8px;}
+.ch-card.c1 .ch-num{color:var(--fuchsia);}
+.ch-card.c2 .ch-num{color:var(--purple-light);}
+.ch-card.c3 .ch-num{color:var(--yellow);}
+.ch-title{font-family:'Bebas Neue',cursive;font-size:clamp(18px,2vw,28px);line-height:1;margin-bottom:12px;}
+.ch-card.c1 .ch-title{color:var(--fuchsia);}
+.ch-card.c2 .ch-title{color:var(--purple-light);}
+.ch-card.c3 .ch-title{color:var(--yellow);}
+.ch-items{display:flex;flex-direction:column;}
+.ch-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.ch-item:last-child{border-bottom:none;}
+.ch-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.ch-card.c1 .ch-dot{background:var(--fuchsia);}
+.ch-card.c2 .ch-dot{background:var(--purple-light);}
+.ch-card.c3 .ch-dot{background:var(--yellow);}
+.ch-text{font-size:13px;line-height:1.55;color:rgba(240,238,232,.65);}
+.ch-bottom{grid-column:1/-1;background:rgba(123,79,255,.1);border-top:1px solid rgba(123,79,255,.2);padding:14px 22px;display:flex;align-items:center;gap:16px;}
+.ch-bottom-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--purple-light);flex-shrink:0;}
+.ch-bottom-txt{font-size:14px;color:rgba(240,238,232,.6);line-height:1.4;}
+
+/* ══ TREND DETAIL ══ */
+.panel-trend{background:#060610;}
+.trend-inner{width:100%;height:100%;display:grid;grid-template-columns:1fr 1fr;align-items:stretch;}
+.trend-left{padding:72px 56px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(255,255,255,.06);}
+.trend-right{padding:72px 48px;display:flex;flex-direction:column;gap:16px;justify-content:center;}
+.trend-lede{font-size:17px;line-height:1.8;color:rgba(240,238,232,.65);margin-bottom:22px;}
+.data-trio{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:22px;}
+.data-cell{padding:14px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);}
+.data-cell strong{display:block;font-family:'Bebas Neue',cursive;font-size:30px;color:var(--yellow);line-height:.9;margin-bottom:8px;}
+.data-cell span{font-size:12px;color:rgba(240,238,232,.5);line-height:1.45;}
+.ex-card{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);padding:14px 18px;}
+.ex-card h4{font-family:'Bebas Neue',cursive;font-size:19px;color:var(--purple-light);margin-bottom:6px;}
+.ex-card p{font-size:13px;line-height:1.6;color:rgba(240,238,232,.55);}
+.trend-implication{background:rgba(123,79,255,.08);border-left:3px solid var(--purple);padding:14px 18px;}
+.trend-implication-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.25em;color:var(--purple-light);text-transform:uppercase;margin-bottom:6px;}
+.trend-implication p{font-size:14px;line-height:1.75;color:rgba(240,238,232,.7);}
+
+/* ══ SYNTHESIS ══ */
+.synth-outer{width:100%;padding:0 80px;}
+.synth-hl{font-family:'Bebas Neue',cursive;font-size:clamp(40px,6vw,80px);line-height:.95;margin-bottom:48px;}
+.synth-hl em{color:var(--fuchsia);font-style:normal;}
+.synth-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:rgba(255,255,255,.06);margin-bottom:32px;}
+.synth-card{background:#060610;padding:40px 32px;}
+.synth-num{font-family:'Bebas Neue',cursive;font-size:64px;color:transparent;-webkit-text-stroke:1px rgba(123,79,255,.3);line-height:1;margin-bottom:12px;}
+.synth-title{font-family:'Bebas Neue',cursive;font-size:clamp(24px,2.5vw,36px);color:var(--white);line-height:1;margin-bottom:16px;}
+.synth-body{font-size:16px;line-height:1.75;color:rgba(240,238,232,.55);}
+.synth-callout{background:rgba(123,79,255,.08);border:1px solid rgba(123,79,255,.2);padding:24px 32px;}
+.synth-callout p{font-size:18px;line-height:1.75;color:rgba(240,238,232,.75);}
+
+/* ══ ROLE / SERVICES ══ */
+.panel-role{background:var(--black);}
+.role-outer{width:100%;height:100%;display:grid;grid-template-columns:310px 1fr;}
+.role-left{padding:72px 40px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(255,255,255,.06);background:var(--dark);}
+.role-headline{font-family:'Bebas Neue',cursive;font-size:clamp(32px,4vw,54px);line-height:.95;letter-spacing:.02em;margin-bottom:16px;}
+.role-headline em{color:var(--purple);font-style:normal;}
+.role-sub{font-size:15px;line-height:1.75;color:rgba(240,238,232,.45);margin-bottom:24px;}
+.role-badge{display:inline-flex;align-items:center;gap:10px;background:rgba(123,79,255,.15);border:1px solid rgba(123,79,255,.3);padding:12px 16px;}
+.role-badge strong{font-family:'Bebas Neue',cursive;font-size:18px;color:var(--yellow);}
+.role-badge span{font-size:13px;color:rgba(255,255,255,.6);}
+.role-right{padding:52px;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:1px;background:rgba(255,255,255,.05);}
+.role-card{background:var(--black);padding:28px 26px;display:flex;flex-direction:column;gap:10px;position:relative;overflow:hidden;transition:background .4s;}
+.role-card:hover{background:rgba(123,79,255,.07);}
+.role-card::after{content:'';position:absolute;bottom:0;left:0;height:3px;width:0;background:linear-gradient(90deg,var(--purple),var(--yellow));transition:width .4s ease;}
+.role-card:hover::after{width:100%;}
+.role-num{font-family:'Bebas Neue',cursive;font-size:12px;letter-spacing:.15em;color:var(--purple);}
+.role-title{font-family:'Bebas Neue',cursive;font-size:clamp(22px,2.2vw,34px);line-height:1;color:var(--white);}
+.role-items{display:flex;flex-direction:column;margin-top:auto;}
+.role-item{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.role-item:last-child{border-bottom:none;}
+.role-arr{font-family:'DM Mono',monospace;font-size:11px;color:var(--purple);flex-shrink:0;}
+.role-txt{font-size:13px;line-height:1.5;color:rgba(240,238,232,.6);}
+
+/* ══ CLOSE — Challenge Cards layout, "How Can Play Help You" ══ */
+.panel-close-ch{background:#060610;}
+.close-ch-outer{width:100%;height:100%;display:grid;grid-template-columns:270px 1fr;}
+.close-ch-left{padding:72px 40px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(255,255,255,.06);background:var(--dark);}
+.close-ch-eyebrow{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.4em;color:rgba(255,255,255,.3);text-transform:uppercase;margin-bottom:16px;}
+.close-ch-headline{font-family:'Bebas Neue',cursive;font-size:clamp(38px,5vw,64px);line-height:.95;letter-spacing:.02em;margin-bottom:20px;}
+.close-ch-headline .hl-y{color:var(--yellow);}
+.close-ch-sub{font-size:16px;line-height:1.8;color:rgba(240,238,232,.45);margin-bottom:24px;}
+.close-ch-note{font-family:'DM Mono',monospace;font-size:12px;letter-spacing:.08em;color:var(--yellow);line-height:1.6;padding:14px 18px;background:rgba(245,230,66,.08);border-left:2px solid var(--yellow);}
+.close-ch-right{padding:48px 48px;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr auto;gap:1px;background:rgba(255,255,255,.05);}
+.close-card{background:#060610;padding:28px 22px;display:flex;flex-direction:column;position:relative;overflow:hidden;transition:background .3s;}
+.close-card:hover{background:rgba(123,79,255,.07);}
+.close-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;}
+.close-card.a1::before{background:var(--purple);}
+.close-card.a2::before{background:var(--fuchsia);}
+.close-card.a3::before{background:var(--yellow);}
+.close-card-num{font-family:'Bebas Neue',cursive;font-size:12px;letter-spacing:.15em;margin-bottom:8px;}
+.close-card.a1 .close-card-num{color:var(--purple-light);}
+.close-card.a2 .close-card-num{color:var(--fuchsia);}
+.close-card.a3 .close-card-num{color:var(--yellow);}
+.close-card-title{font-family:'Bebas Neue',cursive;font-size:clamp(18px,2vw,28px);line-height:1;margin-bottom:12px;}
+.close-card.a1 .close-card-title{color:var(--purple-light);}
+.close-card.a2 .close-card-title{color:var(--fuchsia);}
+.close-card.a3 .close-card-title{color:var(--yellow);}
+.close-card-items{display:flex;flex-direction:column;}
+.close-card-item{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);}
+.close-card-item:last-child{border-bottom:none;}
+.close-card-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.close-card.a1 .close-card-dot{background:var(--purple-light);}
+.close-card.a2 .close-card-dot{background:var(--fuchsia);}
+.close-card.a3 .close-card-dot{background:var(--yellow);}
+.close-card-text{font-size:13px;line-height:1.55;color:rgba(240,238,232,.65);}
+.close-ch-bottom{grid-column:1/-1;background:rgba(245,230,66,.07);border-top:1px solid rgba(245,230,66,.2);padding:14px 22px;display:flex;align-items:center;gap:16px;}
+.close-ch-bottom-lbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.25em;text-transform:uppercase;color:var(--yellow);flex-shrink:0;}
+.close-ch-bottom-txt{font-size:14px;color:rgba(240,238,232,.6);line-height:1.4;}
+
+/* ══ NOTES / APPENDIX ══ */
+.panel-notes{background:#060610;}
+.notes-outer{width:100%;padding:0 80px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:start;}
+.notes-headline{font-family:'Bebas Neue',cursive;font-size:clamp(40px,5vw,72px);line-height:.95;grid-column:1/-1;margin-bottom:40px;}
+.notes-headline .hl{color:var(--fuchsia);}
+.col-title{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.3);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.06);}
+.source-item{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;line-height:1.6;color:rgba(240,238,232,.55);}
+.source-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--purple-light);flex-shrink:0;min-width:22px;}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-follower" id="cursor-follower"></div>
+
+<div id="preloader">
+  <div class="pl-logo">HAVAS PLAY</div>
+  <div class="pl-bar"><div class="pl-progress"></div></div>
+  <div class="pl-sub">Loading</div>
+</div>
+
+<div id="progress-bar"></div>
+
+<nav>
+  <a class="nav-logo" href="#">HAVAS <span>PLAY</span></a>
+  <div class="nav-right">
+    <div class="nav-label" id="navLabel">01 / 17</div>
+    <div class="nav-dots" id="navDots"></div>
+  </div>
+</nav>
+
+<div id="scroll-hint">
+  <span class="hint-text">Scroll</span>
+  <div class="hint-arrow"><span></span><span></span></div>
+</div>
+
+<div id="scroll-container">
+<div id="panels-wrapper">
+
+<!-- P0 COVER -->
+<div class="panel panel-cover" data-panel="0">
+  <div class="cover-grid"></div>
+  <div class="cover-orb"></div>
+  <div class="cover-content">
+    <div class="cover-eyebrow">Decathlon × Havas Play / Global Inspiration Session</div>
+    <h1 class="cover-headline">Sport Is No Longer A<br><span class="hl-purple">Category.</span><br><span class="hl-yellow">It Is Culture.</span></h1>
+    <div class="cover-meta">
+      <div class="cover-meta-item">Format<br><strong>45-min Inspiration Deck</strong></div>
+      <div class="cover-meta-sep"></div>
+      <div class="cover-meta-item">Markets<br><strong>FR · ES · IT · DE · NL · UK</strong></div>
+      <div class="cover-meta-sep"></div>
+      <div class="cover-meta-item">Purpose<br><strong>Cultural Platform + Commercial Opportunity</strong></div>
+    </div>
+    <div class="cover-badges">
+      <span class="cover-badge">Sport × Entertainment</span>
+      <span class="cover-badge">Community × Culture</span>
+      <span class="cover-badge">Creator Economy</span>
+      <span class="cover-badge">Havas Play Playgrounds</span>
+    </div>
+  </div>
+  <div class="cover-scroll-cta" onclick="scrollToPanel(1)">
+    <div class="cover-scroll-line"></div>
+    <span>Begin</span>
+  </div>
+</div>
+
+<!-- P1 QUOTE: Core Idea -->
+<div class="panel panel-quote" data-panel="1">
+  <div class="quote-grid"></div>
+  <div class="quote-orb"></div>
+  <div class="quote-inner">
+    <span class="quote-mark reveal-el">"</span>
+    <p class="quote-text reveal-el">Winning in sport today is not about selling more products.<br>It is about earning a role in people's <span class="hl-fuchsia">active lives, passions and communities.</span></p>
+    <div class="quote-divider reveal-el"></div>
+    <div class="quote-attribution reveal-el">Core idea — Decathlon × Havas Play Session</div>
+  </div>
+</div>
+
+<!-- P2 WHAT IS HAVAS PLAY — Audiences to Communities highlighted left -->
+<div class="panel panel-hp" data-panel="2">
+  <div class="hp-split">
+    <div class="hp-left">
+      <div class="hp-left-inner">
+        <div class="hp-left-label reveal-el">01 — What Is Havas Play</div>
+        <div class="hp-from reveal-el">From</div>
+        <span class="hp-big-word reveal-el">Audiences</span>
+        <span class="hp-arrow reveal-el">↓</span>
+        <span class="hp-to-word reveal-el">Communities</span>
+        <div class="hp-shifts reveal-el">
+          <div class="hp-shift"><span class="hp-shift-lbl">Formats</span><span class="hp-shift-val">Systems</span><span class="hp-shift-arr">→</span></div>
+          <div class="hp-shift"><span class="hp-shift-lbl">Interruption</span><span class="hp-shift-val">Participation</span><span class="hp-shift-arr">→</span></div>
+          <div class="hp-shift"><span class="hp-shift-lbl">Campaigns</span><span class="hp-shift-val">Playgrounds</span><span class="hp-shift-arr">→</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="hp-right">
+      <div class="hp-block">
+        <h2 class="hp-headline reveal-el">From Services<br>to <em>Playgrounds</em></h2>
+        <p class="hp-body reveal-el">We help brands drive meaningful business growth by creating playgrounds where brands and communities connect through passions. We start with people — their interests, codes and communities — and build brand solutions from there. We work within culture, not around it.</p>
+        <div class="hp-stmt reveal-el">Formats and channels are enablers, not the product. Our product is an <span>integrated transmedia system</span> designed to earn relevance and convert it into results.</div>
+        <div class="hp-alert reveal-el">
+          <p>For Decathlon: the brand already belongs to sport culture. The opportunity is to <strong>become more visible and indispensable</strong> inside the spaces that are growing fastest.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P3 WHY NOW — $680Bn replaces €420M Decathlon -->
+<div class="panel panel-white-problem" data-panel="3">
+  <div class="wp-inner">
+    <div>
+      <div class="wp-label reveal-el">02 — Why Now</div>
+      <div class="wp-statement reveal-el">The <span class="highlight">Context</span><br>Has Changed</div>
+      <p style="margin-top:28px;font-size:17px;line-height:1.75;color:rgba(5,5,5,.6);" class="reveal-el">Sport is converging with entertainment faster than most legacy brands are reacting. The creator economy, streaming wars, and community-first models are reshaping how sport is consumed, discovered and lived.</p>
+    </div>
+    <div class="wp-right">
+      <div class="wp-stat-block reveal-el">
+        <div class="wp-stat-number">90%+</div>
+        <div class="wp-stat-desc">Of Gen Z and millennial fans use social media to consume sports-related content — sport now competes in the same attention economy as creators and streaming (Deloitte 2025).</div>
+      </div>
+      <div class="wp-stat-block reveal-el">
+        <div class="wp-stat-number">180M+</div>
+        <div class="wp-stat-desc">Strava users across 185+ countries — activity itself is now social infrastructure, not just tracking. Belonging is the new performance metric.</div>
+      </div>
+      <div class="wp-stat-block reveal-el">
+        <div class="wp-stat-number">$680Bn</div>
+        <div class="wp-stat-desc">Global sports market value projected by 2030 — driven by communities, creators, live experiences and digital engagement, not traditional broadcast (PwC Sports Outlook 2024).</div>
+      </div>
+      <div class="wp-stat-block reveal-el">
+        <div class="wp-stat-number">6h/day</div>
+        <div class="wp-stat-desc">Average daily media and entertainment time per person — brands win inside routines, not at campaign moments (Deloitte Digital Media Trends 2025).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P4 6 TRENDS OVERVIEW — no Beginners, 6 cards -->
+<div class="panel panel-challenge" data-panel="4">
+  <div class="ch-outer">
+    <div class="ch-left">
+      <div class="panel-label reveal-el">03–08 — The Trends</div>
+      <h2 class="ch-headline reveal-el">6 Forces <em>Reshaping</em> Sport</h2>
+      <p class="ch-sub reveal-el">Six interconnected forces are reshaping how sport is played, watched, distributed and felt. Each is a concrete opportunity for Decathlon to lead rather than follow.</p>
+      <div class="ch-note reveal-el">Decathlon has the right to play across more territories than almost any other brand in sport.</div>
+    </div>
+    <div class="ch-right">
+      <div class="ch-card c1 reveal-el">
+        <div class="ch-num">TREND 01</div>
+        <div class="ch-title">Sport as Entertainment</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Sport competes with Netflix, Twitch, YouTube and TikTok</div></div>
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Kings League, La Velada — format innovation drives mass audiences</div></div>
+        </div>
+      </div>
+      <div class="ch-card c2 reveal-el">
+        <div class="ch-num">TREND 02</div>
+        <div class="ch-title">From Users to Tribes</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">10M+ parkrunners, 180M+ Strava users — belonging is a product</div></div>
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Run clubs and cycling crews now drive sport discovery</div></div>
+        </div>
+      </div>
+      <div class="ch-card c3 reveal-el">
+        <div class="ch-num">TREND 03</div>
+        <div class="ch-title">Everyday Lifestyle</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Sport is a daily code: how people commute, dress and signal identity</div></div>
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Athleisure, active mobility and circularity are already culture</div></div>
+        </div>
+      </div>
+      <div class="ch-card c1 reveal-el">
+        <div class="ch-num">TREND 04</div>
+        <div class="ch-title">Creators as New Coaches</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Joe Wicks, Pamela Reif, Ibai — influence fragmented but more powerful</div></div>
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Creator-native sports properties are growing fastest</div></div>
+        </div>
+      </div>
+      <div class="ch-card c2 reveal-el">
+        <div class="ch-num">TREND 05</div>
+        <div class="ch-title">Co-brands & Cultural Transfers</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">PSG × Jordan, Venezia × NOCTA — culture moves through partnership</div></div>
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">The collaboration becomes the story</div></div>
+        </div>
+      </div>
+      <div class="ch-card c3 reveal-el">
+        <div class="ch-num">TREND 06</div>
+        <div class="ch-title">Entertainment Giants Buy Live Sport</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Netflix NFL 31.3M viewers; Amazon UCL rights through 2030/31</div></div>
+          <div class="ch-item"><div class="ch-dot"></div><div class="ch-text">Live sport = real-time attention + communal viewing</div></div>
+        </div>
+      </div>
+      <div class="ch-bottom reveal-el">
+        <span class="ch-bottom-lbl">For Decathlon →</span>
+        <span class="ch-bottom-txt">Decathlon should not only equip the game. It can create the game.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P5 QUOTE: intro individual trends -->
+<div class="panel panel-quote" data-panel="5">
+  <div class="quote-grid"></div>
+  <div class="quote-orb"></div>
+  <div class="quote-inner">
+    <span class="quote-mark reveal-el">"</span>
+    <p class="quote-text reveal-el">Sport no longer competes only with other sport.<br>It competes with <span class="hl-yellow">Netflix, Twitch, YouTube and TikTok.</span></p>
+    <div class="quote-divider reveal-el"></div>
+    <div class="quote-attribution reveal-el">Trend 01 — Sport as Entertainment</div>
+  </div>
+</div>
+
+<!-- P6 TREND 01: Sport as Entertainment -->
+<div class="panel panel-trend" data-panel="6">
+  <div class="trend-inner">
+    <div class="trend-left">
+      <div class="panel-label reveal-el">Trend 01 — Sport as Entertainment</div>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:clamp(42px,5.5vw,80px);line-height:.95;margin-bottom:22px;" class="reveal-el">Sport Is Now<br><span style="color:var(--fuchsia);">An Entertainment Format</span></h2>
+      <p class="trend-lede reveal-el">The biggest shift is not who plays sport. It is how sport is packaged, distributed and experienced. Sport no longer competes only with other sport — it competes with Netflix, Twitch, YouTube and TikTok for the same attention window.</p>
+      <div class="data-trio reveal-el">
+        <div class="data-cell"><strong>223M</strong><span>Social views on the day of WWE RAW's Netflix premiere (Netflix newsroom)</span></div>
+        <div class="data-cell"><strong>31.3M</strong><span>Global avg minute audience for Netflix NFL Christmas Day 2024</span></div>
+        <div class="data-cell"><strong>90%+</strong><span>Young fans use social for sport clips, highlights and live commentary (Deloitte 2025)</span></div>
+      </div>
+      <div class="trend-implication reveal-el">
+        <div class="trend-implication-lbl">For Decathlon</div>
+        <p>Move from sponsoring sport to producing sport entertainment — creator-led formats, city tournaments, challenge properties and hybrid participation events designed for physical attendance and content distribution.</p>
+      </div>
+    </div>
+    <div class="trend-right">
+      <div class="ex-card reveal-el"><h4>Kings League</h4><p>Creator-led football designed for highlight culture and social conversation. Not just a competition — a fully engineered entertainment format.</p></div>
+      <div class="ex-card reveal-el"><h4>La Velada del Año</h4><p>Ibai turns boxing into a creator-powered event property where the bout is only one part of a much larger entertainment ecosystem.</p></div>
+      <div class="ex-card reveal-el"><h4>Sidemen Charity Match / Baller League</h4><p>UK and Germany show the same logic: format, talent mix and social narrative drive mass attention far beyond the sport itself.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon Opportunity</h4><p>Decathlon should not only equip the game. It can create the game — owning formats that are watched, shared and revisited across markets.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- P7 TREND 02: From Users to Tribes -->
+<div class="panel panel-trend" data-panel="7">
+  <div class="trend-inner">
+    <div class="trend-left">
+      <div class="panel-label reveal-el">Trend 02 — From Users to Tribes</div>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:clamp(42px,5.5vw,80px);line-height:.95;margin-bottom:22px;" class="reveal-el">The New Growth<br><span style="color:var(--purple-light);">Engine Is Belonging</span></h2>
+      <p class="trend-lede reveal-el">People do not just want to practice. They want to join. Community has become a product, a retention model and a signal of identity. Belonging is now as important as performance — clubs, crews and shared rituals drive participation.</p>
+      <div class="data-trio reveal-el">
+        <div class="data-cell"><strong>180M+</strong><span>Strava users across 185+ countries — activity as social infrastructure</span></div>
+        <div class="data-cell"><strong>10M+</strong><span>parkrun — an international family of over 10 million registered parkrunners</span></div>
+        <div class="data-cell"><strong>400K/wk</strong><span>Weekly parkrun participants across 2,600 events worldwide (2024/25 annual report)</span></div>
+      </div>
+      <div class="trend-implication reveal-el">
+        <div class="trend-implication-lbl">For Decathlon</div>
+        <p>Stores can become local hubs. Categories can become clubs. Disciplines can become membership propositions. The KPI is not only footfall — it is repeat participation, belonging, advocacy and habit formation.</p>
+      </div>
+    </div>
+    <div class="trend-right">
+      <div class="ex-card reveal-el"><h4>Adidas Runners</h4><p>A global example of running as an owned community platform, not just a campaign. The product enters through the community.</p></div>
+      <div class="ex-card reveal-el"><h4>Rapha Cycling Club</h4><p>Membership, events, content and lifestyle all work together to create tribe value far beyond apparel.</p></div>
+      <div class="ex-card reveal-el"><h4>Run clubs — Paris, Madrid, Berlin, Amsterdam, London</h4><p>The local club is now both media channel and social ritual. The product enters through the community.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon Opportunity</h4><p>Evolve from retailer to community orchestrator — making Decathlon the connective tissue of active life, not just the point of purchase.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- P8 TREND 03: Everyday Lifestyle -->
+<div class="panel panel-trend" data-panel="8">
+  <div class="trend-inner">
+    <div class="trend-left">
+      <div class="panel-label reveal-el">Trend 03 — Sport as Everyday Lifestyle</div>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:clamp(42px,5.5vw,80px);line-height:.95;margin-bottom:22px;" class="reveal-el">Sport Is a<br><span style="color:var(--yellow);">Daily Code</span></h2>
+      <p class="trend-lede reveal-el">Sport is no longer a separate moment in the week. It is becoming a daily code: how people commute, dress, socialise, recover and signal who they are. Lifestyle brands win by being present inside routines, not waiting for campaign moments.</p>
+      <div class="data-trio reveal-el">
+        <div class="data-cell"><strong>6h/day</strong><span>Media and entertainment time per person — sport must live inside daily routines (Deloitte 2025)</span></div>
+        <div class="data-cell"><strong>43</strong><span>Countries with a Decathlon second-hand offering in 2023 — circularity already part of the brand story</span></div>
+        <div class="data-cell"><strong>1.02M</strong><span>Second-hand products sold by Decathlon in 2023 — proof the brand can own conscious sport</span></div>
+      </div>
+      <div class="trend-implication reveal-el">
+        <div class="trend-implication-lbl">For Decathlon</div>
+        <p>Own "everyday sport": moving, commuting, outdoor living, family activity, wellness and conscious participation. That is a richer space than product category marketing — it is a platform idea that Decathlon is structurally placed to own.</p>
+      </div>
+    </div>
+    <div class="trend-right">
+      <div class="ex-card reveal-el"><h4>On Running</h4><p>A performance brand that became a lifestyle and cultural signal through design, community and premium codes.</p></div>
+      <div class="ex-card reveal-el"><h4>Salomon Sportstyle</h4><p>Trail heritage translated into fashion relevance and urban desirability — sport as aesthetic identity.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon Second Life</h4><p>Repair, resale and buy-back reframed not as utility, but as part of a broader everyday active-life proposition — conscious participation as identity.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon Opportunity</h4><p>Become the brand that makes everyday sport aspirational, accessible and shareable — across commuting, family life, circularity and urban movement.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- P9 TREND 04: Creators as New Coaches -->
+<div class="panel panel-trend" data-panel="9">
+  <div class="trend-inner">
+    <div class="trend-left">
+      <div class="panel-label reveal-el">Trend 04 — Creators as New Coaches</div>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:clamp(42px,5.5vw,80px);line-height:.95;margin-bottom:22px;" class="reveal-el">Creators Are<br><span style="color:var(--purple-light);">The New Leagues</span></h2>
+      <p class="trend-lede reveal-el">The role of the athlete has not disappeared, but influence has fragmented. Discovery, explanation, motivation and fandom are increasingly mediated by creators — people who teach, test, host, challenge and entertain around disciplines.</p>
+      <div class="data-trio reveal-el">
+        <div class="data-cell"><strong>90%+</strong><span>Social is already the dominant sports content touchpoint for younger fans (Deloitte 2025)</span></div>
+        <div class="data-cell"><strong>47 wks</strong><span>WWE RAW made the Netflix Global English TV Top 10 nearly every week in its first year</span></div>
+        <div class="data-cell"><strong>Creator-native</strong><span>The fastest-growing sports properties are built with creators baked into the format from day one</span></div>
+      </div>
+      <div class="trend-implication reveal-el">
+        <div class="trend-implication-lbl">For Decathlon</div>
+        <p>Think beyond talent casting. Build creator ecosystems by sport: coaches, challengers, testers, educators and entertainers by category and market. That creates content, commerce and credibility simultaneously.</p>
+      </div>
+    </div>
+    <div class="trend-right">
+      <div class="ex-card reveal-el"><h4>Joe Wicks</h4><p>Fitness, coaching and mass audience motivation collapsed into one creator persona — no traditional media infrastructure needed.</p></div>
+      <div class="ex-card reveal-el"><h4>Pamela Reif</h4><p>A global fitness creator proving that community and routine can be built across markets without legacy assets.</p></div>
+      <div class="ex-card reveal-el"><h4>Ibai Ecosystem</h4><p>Not influencer amplification, but the creation of new sports IPs and new audience behaviour — Kings League, La Velada del Año.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon Opportunity</h4><p>Build a network of Decathlon-aligned creators by category — running, cycling, hiking, family sport — to drive discovery, trust and community at scale.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- P10 TREND 05: Co-brands & Cultural Transfers -->
+<div class="panel panel-trend" data-panel="10">
+  <div class="trend-inner">
+    <div class="trend-left">
+      <div class="panel-label reveal-el">Trend 05 — Co-brands & Cultural Transfers</div>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:clamp(40px,5.5vw,76px);line-height:.95;margin-bottom:22px;" class="reveal-el">Sport Crosses Into<br><span style="color:var(--yellow);">Fashion, Music & Street Culture</span></h2>
+      <p class="trend-lede reveal-el">Some of the most relevant moves in sport today happen when sport crosses into fashion, music, design and street culture. The product becomes a cultural object. The partnership becomes the story.</p>
+      <div class="data-trio reveal-el">
+        <div class="data-cell"><strong>PSG×Jordan</strong><span>One of the clearest examples of a football club becoming a global style property</span></div>
+        <div class="data-cell"><strong>Venezia×NOCTA</strong><span>A club explicitly positioning itself at the forefront of sport and contemporary culture</span></div>
+        <div class="data-cell"><strong>AC Milan×Off-White™</strong><span>PUMA framed the 2025 kit as a fusion of football, fashion and innovation</span></div>
+      </div>
+      <div class="trend-implication reveal-el">
+        <div class="trend-implication-lbl">For Decathlon</div>
+        <p>Use collaborations not only to create short-term buzz, but to reframe perception. Designers, creators, athletes, cities and cultural platforms can all become partners that move the brand into more desirable, conversation-worthy spaces.</p>
+      </div>
+    </div>
+    <div class="trend-right">
+      <div class="ex-card reveal-el"><h4>Jordan Wings × PSG</h4><p>Elevated streetwear that blurs performance, fandom and luxury style codes — club as global fashion property.</p></div>
+      <div class="ex-card reveal-el"><h4>Venezia FC × NOCTA</h4><p>Football club, fashion language and cultural positioning working as one ecosystem. The kit is the campaign.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon × Van Rysel / KIPSTA</h4><p>AG2R and UEFA already show the brand can build bridges between accessibility and high-level legitimacy — the foundation is already there.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon Opportunity</h4><p>Collaborate with designers, local artists, city communities and cultural platforms to move into spaces where aspiration, identity and accessibility meet.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- P11 TREND 06: Entertainment Giants Buy Live Sport -->
+<div class="panel panel-trend" data-panel="11">
+  <div class="trend-inner">
+    <div class="trend-left">
+      <div class="panel-label reveal-el">Trend 06 — Entertainment Giants Buy Live Sport</div>
+      <h2 style="font-family:'Bebas Neue',cursive;font-size:clamp(40px,5.5vw,76px);line-height:.95;margin-bottom:22px;" class="reveal-el">Live Sport Is<br><span style="color:var(--purple-light);">A Strategic Attention Product</span></h2>
+      <p class="trend-lede reveal-el">Why are Netflix, Amazon and Apple leaning hard into sports rights? Because live sport solves the biggest problem in modern media: real-time attention, communal viewing and advertiser demand. Sport is no longer a side experiment — it is a strategic anchor.</p>
+      <div class="data-trio reveal-el">
+        <div class="data-cell"><strong>31.3M</strong><span>Global avg minute audience for Netflix NFL Christmas Day 2024 — Ravens vs Texans</span></div>
+        <div class="data-cell"><strong>2030/31</strong><span>Amazon Prime Video holds UK UEFA Champions League rights through this season</span></div>
+        <div class="data-cell"><strong>Apple+MLS</strong><span>Apple positions live F1, MLS and MLB as core Apple TV+ value — sport as ecosystem anchor</span></div>
+      </div>
+      <div class="trend-implication reveal-el">
+        <div class="trend-implication-lbl">For Decathlon</div>
+        <p>Think more boldly about owned or partnerable sports moments. Not just media buying around sport, but brand properties that can be watched, shared and revisited — turning fandom into shopping, subscription and data.</p>
+      </div>
+    </div>
+    <div class="trend-right">
+      <div class="ex-card reveal-el"><h4>Netflix</h4><p>NFL Christmas Day, WWE RAW and global live-event ambition show sport is becoming a strategic attention product — not a side experiment.</p></div>
+      <div class="ex-card reveal-el"><h4>Amazon Prime Video</h4><p>Rights plus commerce plus ecosystem value: streaming can turn fandom into shopping, subscription and data intelligence.</p></div>
+      <div class="ex-card reveal-el"><h4>Apple TV</h4><p>Sport woven into a broader product ecosystem — hardware, news, music, maps, fitness and subscription value working as one platform.</p></div>
+      <div class="ex-card reveal-el"><h4>Decathlon Opportunity</h4><p>If media giants pay for live sport because it anchors attention, Decathlon should think about owning sport moments — not just media-buying around them.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- P12 QUOTE: Synthesis -->
+<div class="panel panel-quote" data-panel="12">
+  <div class="quote-grid"></div>
+  <div class="quote-orb"></div>
+  <div class="quote-inner">
+    <span class="quote-mark reveal-el">"</span>
+    <p class="quote-text reveal-el">Decathlon does not need to enter sport culture.<br>It is <span class="hl-purple">already inside it.</span><br>The opportunity is to become more <span class="hl-yellow">visible and indispensable</span> inside the parts that are growing fastest.</p>
+    <div class="quote-divider reveal-el"></div>
+    <div class="quote-attribution reveal-el">Synthesis — Decathlon × Havas Play</div>
+  </div>
+</div>
+
+<!-- P13 SYNTHESIS: 3 Pillars -->
+<div class="panel" style="background:#060610;" data-panel="13">
+  <div class="synth-outer">
+    <div class="panel-label reveal-el">Synthesis</div>
+    <h2 class="synth-hl reveal-el">What This Adds Up To<br>For <em>Decathlon</em></h2>
+    <div class="synth-grid">
+      <div class="synth-card reveal-el">
+        <div class="synth-num">01</div>
+        <div class="synth-title">Build Communities</div>
+        <p class="synth-body">Move from transactional categories to owned communities by discipline, life stage and city. Make Decathlon the connective tissue of active life — not just the point of purchase.</p>
+      </div>
+      <div class="synth-card reveal-el">
+        <div class="synth-num">02</div>
+        <div class="synth-title">Create Entertainment</div>
+        <p class="synth-body">Design sport-led IPs and event formats that people want to attend, watch and share. Decathlon should not only equip the game. It can create the game.</p>
+      </div>
+      <div class="synth-card reveal-el">
+        <div class="synth-num">03</div>
+        <div class="synth-title">Own Everyday Sport</div>
+        <p class="synth-body">Make Decathlon synonymous with accessible, modern, active living — not just gear purchase. Mobility, circularity, wellness and active lifestyle as a coherent cultural platform.</p>
+      </div>
+    </div>
+    <div class="synth-callout reveal-el">
+      <p>The opportunity is to become more visible and more indispensable inside the parts of sport culture growing fastest: entertainment, community, creators, lifestyle, accessibility and cross-cultural collaborations.</p>
+    </div>
+  </div>
+</div>
+
+<!-- P14 4 HAVAS PLAY PRODUCTS -->
+<div class="panel panel-role" data-panel="14">
+  <div class="role-outer">
+    <div class="role-left">
+      <div class="panel-label reveal-el">Direct Commercial Angle</div>
+      <h2 class="role-headline reveal-el">From Trends To<br><em>Havas Play</em><br>Products</h2>
+      <p class="role-sub reveal-el">Four concrete opportunity areas where Havas Play can activate for Decathlon across markets — each designed as an end-to-end playground.</p>
+      <div class="role-badge reveal-el"><strong>CTA →</strong><span>Choose one priority playground + one pilot market</span></div>
+    </div>
+    <div class="role-right">
+      <div class="role-card reveal-el">
+        <div class="role-num">OPPORTUNITY 01</div>
+        <div class="role-title">Decathlon Community Playgrounds</div>
+        <div class="role-items">
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">Build local and regional communities by sport or life territory: running, cycling, hiking, racket sports, family sport, women's active</span></div>
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">Cultural Consultancy · Social & Influence · Experiences · Measurement</span></div>
+        </div>
+      </div>
+      <div class="role-card reveal-el">
+        <div class="role-num">OPPORTUNITY 02</div>
+        <div class="role-title">Decathlon Entertainment IPs</div>
+        <div class="role-items">
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">Create challenge formats, city competitions, hybrid participation events or creator-led tournaments that scale across markets</span></div>
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">IP Creation · Live Experiences · Partnerships & Sponsorships · Amplification</span></div>
+        </div>
+      </div>
+      <div class="role-card reveal-el">
+        <div class="role-num">OPPORTUNITY 03</div>
+        <div class="role-title">Decathlon Creator Ecosystem</div>
+        <div class="role-items">
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">Build a network of coaches, challengers, testers, educators and entertainers by category and market</span></div>
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">Social & Influence · Branded Content · Integrated & Native · Creator Measurement</span></div>
+        </div>
+      </div>
+      <div class="role-card reveal-el">
+        <div class="role-num">OPPORTUNITY 04</div>
+        <div class="role-title">Decathlon Everyday Sport Platform</div>
+        <div class="role-items">
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">Turn mobility, circularity, wellness and active lifestyle into a coherent editorial and experiential brand platform</span></div>
+          <div class="role-item"><span class="role-arr">→</span><span class="role-txt">Branded Content · Experiences · Integrated & Native · Media Amplification</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P15 CLOSE — Challenge Cards layout / "How Can Play Help You" in yellow -->
+<div class="panel panel-close-ch" data-panel="15">
+  <div class="close-ch-outer">
+    <div class="close-ch-left">
+      <div class="close-ch-eyebrow reveal-el">Closing</div>
+      <h2 class="close-ch-headline reveal-el">How Can <span class="hl-y">Play</span><br>Help You?</h2>
+      <p class="close-ch-sub reveal-el">Decathlon can become the brand that helps more people not just buy sport, but <strong style="color:var(--white);">belong to it.</strong> Let's define what that looks like — together.</p>
+      <div class="close-ch-note reveal-el">Let's build the playground, not just the presentation.</div>
+    </div>
+    <div class="close-ch-right">
+      <div class="close-card a1 reveal-el">
+        <div class="close-card-num">NEXT STEP 01</div>
+        <div class="close-card-title">Prioritise Playgrounds</div>
+        <div class="close-card-items">
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Run a working session to identify 2–3 playgrounds most relevant for Decathlon's priorities across markets</div></div>
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Example: Running communities in France · Creator-led family sport in Spain</div></div>
+        </div>
+      </div>
+      <div class="close-card a2 reveal-el">
+        <div class="close-card-num">NEXT STEP 02</div>
+        <div class="close-card-title">Choose a Pilot</div>
+        <div class="close-card-items">
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Select one pilot market and one lead category to move from inspiration to activation</div></div>
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Example: Circular cycling culture in Germany · Entertainment-led active city challenge in the UK</div></div>
+        </div>
+      </div>
+      <div class="close-card a3 reveal-el">
+        <div class="close-card-num">NEXT STEP 03</div>
+        <div class="close-card-title">Shape the Roadmap</div>
+        <div class="close-card-items">
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Build a first 90-day activation roadmap with a clear KPI framework across the full funnel</div></div>
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">From engagement and community growth to brand lift, conversion indicators and ROI</div></div>
+        </div>
+      </div>
+      <div class="close-card a1 reveal-el">
+        <div class="close-card-num">HOW PLAY WORKS</div>
+        <div class="close-card-title">Intelligence & Design</div>
+        <div class="close-card-items">
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Analyse passions and community behaviours to identify where the brand has the right to play</div></div>
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Develop a central creative platform built to travel across touchpoints with consistency and flexibility</div></div>
+        </div>
+      </div>
+      <div class="close-card a2 reveal-el">
+        <div class="close-card-num">HOW PLAY WORKS</div>
+        <div class="close-card-title">Activate & Amplify</div>
+        <div class="close-card-items">
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Bring the idea to life through integrated ecosystems — content, experiences, partnerships, creators and communities</div></div>
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Inside Havas Media Network: paid and earned working together in the right contexts with the right partners</div></div>
+        </div>
+      </div>
+      <div class="close-card a3 reveal-el">
+        <div class="close-card-num">HOW PLAY WORKS</div>
+        <div class="close-card-title">Measure What Matters</div>
+        <div class="close-card-items">
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Track performance across the full funnel — from community growth to brand lift and business ROI</div></div>
+          <div class="close-card-item"><div class="close-card-dot"></div><div class="close-card-text">Systems over services. Connection over coverage. Relevance over repetition.</div></div>
+        </div>
+      </div>
+      <div class="close-ch-bottom reveal-el">
+        <span class="close-ch-bottom-lbl">Havas Play →</span>
+        <span class="close-ch-bottom-txt">We start from a deep understanding of people, then operate where brand credibility meets people's passions. Let's play.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- P16 APPENDIX: Sources -->
+<div class="panel panel-notes" data-panel="16">
+  <div class="notes-outer">
+    <h2 class="notes-headline reveal-el">Source <span class="hl">Backbone</span></h2>
+    <div>
+      <div class="col-title reveal-el">Research & Reports</div>
+      <div class="source-item reveal-el"><span class="source-num">01</span>Havas Play narrative: "We help brands grow by creating playgrounds where brands and communities connect through passions."</div>
+      <div class="source-item reveal-el"><span class="source-num">02</span>Deloitte 2026 Sports Industry Outlook</div>
+      <div class="source-item reveal-el"><span class="source-num">03</span>Deloitte 2025 Sports Industry Outlook</div>
+      <div class="source-item reveal-el"><span class="source-num">04</span>Deloitte 2025 Digital Media Trends</div>
+      <div class="source-item reveal-el"><span class="source-num">05</span>Deloitte 2024 Digital Media Trends</div>
+      <div class="source-item reveal-el"><span class="source-num">06</span>Strava Year In Sport 2024 and 2025 reports / press releases</div>
+      <div class="source-item reveal-el"><span class="source-num">07</span>parkrun About page and 2024/25 annual report</div>
+      <div class="source-item reveal-el"><span class="source-num">08</span>PwC Sports Outlook 2024 — global sports market value projection to 2030 ($680Bn)</div>
+    </div>
+    <div>
+      <div class="col-title reveal-el">Brand & Platform Sources</div>
+      <div class="source-item reveal-el"><span class="source-num">09</span>Decathlon sustainability / circularity and group performance reporting (Second Life, 43-country rollout)</div>
+      <div class="source-item reveal-el"><span class="source-num">10</span>Netflix newsroom: NFL Christmas Gameday, WWE RAW launch and first-year performance</div>
+      <div class="source-item reveal-el"><span class="source-num">11</span>Amazon / UEFA partner pages on UK Champions League coverage through 2030/31</div>
+      <div class="source-item reveal-el"><span class="source-num">12</span>Apple TV / Apple Newsroom — MLS, F1 and live sport integration</div>
+      <div class="source-item reveal-el"><span class="source-num">13</span>Nike, PUMA, Venezia FC and Decathlon press materials — collaboration and partnership examples</div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /panels-wrapper -->
+</div><!-- /scroll-container -->
+
+<script>
+// CURSOR
+const cursor=document.getElementById('cursor');
+const follower=document.getElementById('cursor-follower');
+let mouseX=0,mouseY=0,followerX=0,followerY=0;
+document.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;cursor.style.left=mouseX+'px';cursor.style.top=mouseY+'px';});
+(function animateCursor(){followerX+=(mouseX-followerX)*.12;followerY+=(mouseY-followerY)*.12;follower.style.left=followerX+'px';follower.style.top=followerY+'px';requestAnimationFrame(animateCursor);})();
+
+// PRELOADER
+window.addEventListener('load',()=>setTimeout(()=>document.getElementById('preloader').classList.add('hidden'),2600));
+
+// SCROLL ENGINE — 17 panels
+const PANEL_COUNT=17;
+const navDots=document.getElementById('navDots');
+for(let i=0;i<PANEL_COUNT;i++){const d=document.createElement('div');d.className='nav-dot'+(i===0?' active':'');d.addEventListener('click',()=>scrollToPanel(i));navDots.appendChild(d);}
+const wrapper=document.getElementById('panels-wrapper');
+const progressBar=document.getElementById('progress-bar');
+const scrollHint=document.getElementById('scroll-hint');
+const navLabel=document.getElementById('navLabel');
+let currentPanel=0,isScrolling=false,targetX=0,currentX=0;
+function scrollToPanel(index){if(index<0||index>=PANEL_COUNT||isScrolling)return;currentPanel=index;targetX=index*window.innerWidth;updateUI();animateScroll();}
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+function animateScroll(){isScrolling=true;const startX=currentX,startTime=performance.now();function step(now){const p=Math.min((now-startTime)/900,1);currentX=startX+(targetX-startX)*easeInOutCubic(p);wrapper.style.transform=`translateX(${-currentX}px)`;if(p<1){requestAnimationFrame(step);}else{currentX=targetX;isScrolling=false;triggerReveal(currentPanel);}}requestAnimationFrame(step);}
+function updateUI(){const pct=(currentPanel/(PANEL_COUNT-1))*100;progressBar.style.width=pct+'%';document.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===currentPanel));scrollHint.classList.toggle('hidden',currentPanel>0);if(navLabel)navLabel.textContent=String(currentPanel+1).padStart(2,'0')+' / '+String(PANEL_COUNT).padStart(2,'0');}
+function triggerReveal(idx){const panel=document.querySelector(`[data-panel="${idx}"]`);if(!panel)return;panel.querySelectorAll('.reveal-el').forEach((el,i)=>setTimeout(()=>el.classList.add('revealed'),i*70));}
+setTimeout(()=>triggerReveal(0),2800);
+let wQueue=0,wTimer=null;
+document.addEventListener('wheel',e=>{e.preventDefault();if(isScrolling)return;clearTimeout(wTimer);wQueue+=e.deltaY;wTimer=setTimeout(()=>{if(Math.abs(wQueue)>30){wQueue>0?scrollToPanel(currentPanel+1):scrollToPanel(currentPanel-1);}wQueue=0;},50);},{passive:false});
+let touchStartX=0;
+document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;});
+document.addEventListener('touchend',e=>{const diff=touchStartX-e.changedTouches[0].clientX;if(Math.abs(diff)>60){diff>0?scrollToPanel(currentPanel+1):scrollToPanel(currentPanel-1);}});
+document.addEventListener('keydown',e=>{if(isScrolling)return;if(e.key==='ArrowRight'||e.key==='ArrowDown')scrollToPanel(currentPanel+1);if(e.key==='ArrowLeft'||e.key==='ArrowUp')scrollToPanel(currentPanel-1);});
+window.addEventListener('resize',()=>{targetX=currentPanel*window.innerWidth;currentX=targetX;wrapper.style.transform=`translateX(${-currentX}px)`;});
+updateUI();
+</script>
+</body>
+</html>
