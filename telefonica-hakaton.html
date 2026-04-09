@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Play The Brief — Havas Play × Amazon × Telefónica</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --black: #050505;
+  --dark: #0D0F1A;
+  --gray: #1A1A1A;
+  --purple: #7B4FFF;
+  --purple-light: #9D77FF;
+  --fuchsia: #C8177A;
+  --yellow: #F5E642;
+  --white: #F0EEE8;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { background: var(--black); color: var(--white); font-family: 'Syne', sans-serif; overflow: hidden; cursor: none; }
+
+/* Cursor */
+.cursor { position:fixed; width:12px; height:12px; background:var(--yellow); border-radius:50%; pointer-events:none; z-index:9999; transform:translate(-50%,-50%); transition:width .3s,height .3s; mix-blend-mode:difference; }
+.cursor-follower { position:fixed; width:40px; height:40px; border:1px solid rgba(123,79,255,.6); border-radius:50%; pointer-events:none; z-index:9998; transform:translate(-50%,-50%); transition:all .15s ease; }
+
+/* Preloader */
+#preloader { position:fixed; inset:0; background:var(--black); z-index:10000; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:24px; transition:opacity .8s ease,visibility .8s ease; }
+#preloader.hidden { opacity:0; visibility:hidden; pointer-events:none; }
+.pl-logo { font-family:'Bebas Neue',cursive; font-size:clamp(60px,12vw,120px); letter-spacing:.05em; background:linear-gradient(135deg,var(--purple),var(--yellow)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; animation:pulseLogo 1.2s ease-in-out infinite alternate; }
+@keyframes pulseLogo { from{opacity:.4} to{opacity:1} }
+.pl-sub { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.3em; color:rgba(255,255,255,.4); text-transform:uppercase; }
+.pl-bar { width:200px; height:2px; background:var(--gray); overflow:hidden; }
+.pl-progress { height:100%; background:linear-gradient(90deg,var(--purple),var(--yellow)); width:0; animation:loadBar 2.2s ease forwards; }
+@keyframes loadBar { to{width:100%} }
+
+/* Progress bar */
+#progress-bar { position:fixed; top:0; left:0; height:3px; background:linear-gradient(90deg,var(--purple),var(--yellow)); z-index:1000; transition:width .1s linear; width:0%; }
+
+/* Nav */
+nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; justify-content:space-between; align-items:center; z-index:500; }
+.nav-logo { font-family:'Bebas Neue',cursive; font-size:20px; letter-spacing:.12em; color:var(--white); text-decoration:none; }
+.nav-logo span { color:var(--purple); }
+.nav-right { display:flex; align-items:center; gap:20px; }
+.nav-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.25em; color:rgba(255,255,255,.3); text-transform:uppercase; }
+.nav-dots { display:flex; gap:6px; }
+.nav-dot { width:6px; height:6px; border-radius:50%; background:rgba(255,255,255,.2); cursor:pointer; transition:all .3s ease; }
+.nav-dot.active { background:var(--yellow); transform:scale(1.5); }
+
+/* Scroll hint */
+#scroll-hint { position:fixed; bottom:36px; right:48px; display:flex; align-items:center; gap:12px; opacity:1; transition:opacity .5s ease; z-index:500; }
+#scroll-hint.hidden { opacity:0; pointer-events:none; }
+.hint-text { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.25em; color:rgba(255,255,255,.4); text-transform:uppercase; }
+.hint-arrow { display:flex; gap:4px; animation:arrowPulse 1.5s ease infinite; }
+@keyframes arrowPulse { 0%,100%{opacity:.3;transform:translateX(0)} 50%{opacity:1;transform:translateX(6px)} }
+.hint-arrow span { width:6px; height:6px; border-right:1.5px solid var(--yellow); border-top:1.5px solid var(--yellow); transform:rotate(45deg); }
+
+/* Layout */
+#scroll-container { display:flex; height:100vh; overflow:hidden; }
+#panels-wrapper { display:flex; height:100vh; will-change:transform; }
+.panel { min-width:100vw; height:100vh; position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; }
+
+/* Reveal system */
+.reveal-el { opacity:0; transform:translateY(24px); transition:opacity .6s ease,transform .6s ease; }
+.reveal-el.revealed { opacity:1; transform:translateY(0); }
+
+/* Shared panel-label */
+.panel-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.4em; color:var(--yellow); text-transform:uppercase; margin-bottom:20px; display:flex; align-items:center; gap:12px; }
+.panel-label::before { content:''; display:inline-block; width:24px; height:1px; background:var(--yellow); }
+
+/* Tags */
+.tag { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.15em; padding:4px 10px; border:1px solid rgba(123,79,255,.35); color:var(--purple-light); text-transform:uppercase; }
+.tag.fuchsia { border-color:rgba(200,23,122,.4); color:#E05BA0; }
+.tag.yellow { border-color:rgba(245,230,66,.35); color:var(--yellow); }
+
+/* Background animations */
+@keyframes gridMove { from{background-position:0 0} to{background-position:80px 80px} }
+@keyframes orbPulse { from{transform:translate(-50%,-50%) scale(.9);opacity:.6} to{transform:translate(-50%,-50%) scale(1.1);opacity:1} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+@keyframes scrollLine { 0%,100%{transform:scaleY(1);opacity:.4} 50%{transform:scaleY(.5);opacity:1} }
+
+/* ════════════════════════════════
+   PANEL 0 — COVER
+════════════════════════════════ */
+.panel-cover { background: var(--dark); }
+.cover-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(123,79,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(123,79,255,.06) 1px,transparent 1px); background-size:80px 80px; animation:gridMove 20s linear infinite; }
+.cover-orb { position:absolute; width:700px; height:700px; background:radial-gradient(circle,rgba(123,79,255,.2) 0%,transparent 70%); border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); animation:orbPulse 4s ease-in-out infinite alternate; }
+.cover-content { position:relative; z-index:2; text-align:center; max-width:1000px; padding:0 60px; }
+.cover-eyebrow { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.4em; color:var(--purple-light); text-transform:uppercase; margin-bottom:32px; opacity:0; animation:fadeUp .8s ease 2.5s forwards; }
+.cover-headline { font-family:'Bebas Neue',cursive; font-size:clamp(64px,11vw,140px); line-height:.92; letter-spacing:.02em; margin-bottom:36px; opacity:0; animation:fadeUp .8s ease 2.7s forwards; }
+.cover-headline .hl-purple { color:var(--purple); }
+.cover-headline .hl-yellow { color:var(--yellow); }
+.cover-meta { display:flex; align-items:center; justify-content:center; gap:32px; flex-wrap:wrap; opacity:0; animation:fadeUp .8s ease 2.9s forwards; margin-bottom:48px; }
+.cover-meta-item { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.2em; color:rgba(255,255,255,.4); text-transform:uppercase; }
+.cover-meta-item strong { color:var(--white); font-family:'Syne',sans-serif; font-size:13px; display:block; margin-top:4px; }
+.cover-meta-sep { width:1px; height:28px; background:rgba(255,255,255,.12); }
+.cover-badges { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; opacity:0; animation:fadeUp .8s ease 3.1s forwards; }
+.cover-badge { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.2em; text-transform:uppercase; padding:8px 18px; border:1px solid rgba(123,79,255,.4); color:var(--purple-light); clip-path:polygon(0 0,calc(100% - 8px) 0,100% 8px,100% 100%,8px 100%,0 calc(100% - 8px)); }
+.cover-scroll-cta { position:absolute; bottom:40px; left:50%; transform:translateX(-50%); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.3em; color:rgba(255,255,255,.25); text-transform:uppercase; opacity:0; animation:fadeUp .8s ease 3.4s forwards; display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer; }
+.cover-scroll-line { width:1px; height:40px; background:linear-gradient(to bottom,var(--purple),transparent); animation:scrollLine 2s ease-in-out infinite; }
+
+/* ════════════════════════════════
+   PANEL 1 — CONTEXT SPLIT
+════════════════════════════════ */
+.panel-context { background:#070711; }
+.context-split { display:grid; grid-template-columns:1fr 1fr; width:100%; height:100%; }
+.context-left { background:var(--dark); display:flex; align-items:center; justify-content:center; padding:80px 60px; border-right:1px solid rgba(123,79,255,.2); position:relative; overflow:hidden; }
+.context-left::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(-45deg,transparent,transparent 4px,rgba(123,79,255,.03) 4px,rgba(123,79,255,.03) 8px); }
+.ctx-stat { position:relative; z-index:2; text-align:center; }
+.ctx-big { font-family:'Bebas Neue',cursive; font-size:clamp(80px,12vw,160px); color:var(--purple); line-height:1; display:block; }
+.ctx-unit { font-family:'Bebas Neue',cursive; font-size:clamp(28px,4vw,56px); color:var(--yellow); display:block; margin-top:-8px; }
+.ctx-lbl { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.25em; color:rgba(255,255,255,.4); text-transform:uppercase; margin-top:20px; }
+.stat-row { display:flex; gap:16px; justify-content:center; margin-top:36px; }
+.stat-pill { text-align:center; background:rgba(123,79,255,.12); border:1px solid rgba(123,79,255,.25); padding:14px 18px; }
+.stat-pill-val { font-family:'Bebas Neue',cursive; font-size:32px; color:var(--yellow); display:block; line-height:1; }
+.stat-pill-lbl { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.15em; color:rgba(255,255,255,.4); text-transform:uppercase; margin-top:4px; }
+.context-right { display:flex; align-items:center; padding:80px 60px; background:#070711; }
+.ctx-block { max-width:480px; }
+.ctx-headline { font-family:'Bebas Neue',cursive; font-size:clamp(36px,4.5vw,64px); line-height:1; margin-bottom:24px; letter-spacing:.02em; }
+.ctx-headline em { color:var(--purple); font-style:normal; }
+.ctx-body { font-size:18px; line-height:1.85; color:rgba(240,238,232,.6); margin-bottom:20px; }
+.arrow-stmt { font-family:'Bebas Neue',cursive; font-size:clamp(16px,2vw,24px); color:var(--white); letter-spacing:.04em; padding:18px 24px; background:rgba(123,79,255,.1); border-left:3px solid var(--purple); margin:20px 0; }
+.arrow-stmt span { color:var(--yellow); }
+.alert-box { background:rgba(200,23,122,.1); border:1px solid rgba(200,23,122,.25); border-left:3px solid var(--fuchsia); padding:16px 20px; }
+.alert-box p { font-size:17px; line-height:1.75; color:rgba(240,238,232,.8); }
+.alert-box p strong { color:var(--fuchsia); }
+
+/* ════════════════════════════════
+   PANEL 2 — QUOTE
+════════════════════════════════ */
+.panel-quote { background:var(--dark); }
+.quote-grid { position:absolute; inset:0; background-image:linear-gradient(rgba(123,79,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(123,79,255,.04) 1px,transparent 1px); background-size:80px 80px; animation:gridMove 20s linear infinite; }
+.quote-orb { position:absolute; width:600px; height:600px; background:radial-gradient(circle,rgba(123,79,255,.15) 0%,transparent 70%); border-radius:50%; top:50%; left:50%; transform:translate(-50%,-50%); animation:orbPulse 5s ease-in-out infinite alternate; }
+.quote-inner { position:relative; z-index:2; text-align:center; max-width:900px; padding:0 80px; }
+.quote-mark { font-family:'Bebas Neue',cursive; font-size:120px; color:var(--purple); line-height:.6; display:block; margin-bottom:16px; opacity:.35; }
+.quote-text { font-family:'Syne',sans-serif; font-size:clamp(24px,3.2vw,42px); font-weight:700; line-height:1.25; color:var(--white); margin-bottom:40px; letter-spacing:-.01em; }
+.quote-text .hl-purple { color:var(--purple-light); }
+.quote-text .hl-yellow { color:var(--yellow); }
+.quote-text .hl-fuchsia { color:var(--fuchsia); }
+.quote-divider { width:48px; height:2px; background:linear-gradient(90deg,var(--purple),var(--fuchsia)); margin:0 auto 32px; }
+.quote-attribution { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.35); }
+
+/* ════════════════════════════════
+   PANEL 3 — CHALLENGE CARDS
+════════════════════════════════ */
+.panel-challenge { background:#060610; }
+.ch-outer { width:100%; height:100%; display:grid; grid-template-columns:300px 1fr; }
+.ch-left { padding:80px 44px; display:flex; flex-direction:column; justify-content:center; border-right:1px solid rgba(255,255,255,.06); background:var(--dark); }
+.ch-headline { font-family:'Bebas Neue',cursive; font-size:clamp(38px,5vw,66px); line-height:.95; letter-spacing:.02em; margin-bottom:20px; }
+.ch-headline em { color:var(--fuchsia); font-style:normal; }
+.ch-sub { font-size:17px; line-height:1.8; color:rgba(240,238,232,.45); margin-bottom:28px; }
+.ch-note { font-family:'DM Mono',monospace; font-size:13px; letter-spacing:.1em; color:var(--fuchsia); line-height:1.6; padding:16px 20px; background:rgba(200,23,122,.1); border-left:2px solid var(--fuchsia); }
+.ch-right { padding:64px 60px; display:grid; grid-template-columns:1fr 1fr 1fr; grid-template-rows:1fr auto; gap:1px; background:rgba(255,255,255,.05); }
+.ch-card { background:#060610; padding:36px 28px; display:flex; flex-direction:column; position:relative; overflow:hidden; transition:background .3s; }
+.ch-card:hover { background:rgba(123,79,255,.07); }
+.ch-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; }
+.ch-card.c1::before { background:var(--fuchsia); }
+.ch-card.c2::before { background:var(--purple); }
+.ch-card.c3::before { background:var(--yellow); }
+.ch-num { font-family:'Bebas Neue',cursive; font-size:13px; letter-spacing:.15em; margin-bottom:10px; }
+.ch-card.c1 .ch-num { color:var(--fuchsia); }
+.ch-card.c2 .ch-num { color:var(--purple-light); }
+.ch-card.c3 .ch-num { color:var(--yellow); }
+.ch-title { font-family:'Bebas Neue',cursive; font-size:clamp(26px,3vw,40px); line-height:1; margin-bottom:20px; }
+.ch-card.c1 .ch-title { color:var(--fuchsia); }
+.ch-card.c2 .ch-title { color:var(--purple-light); }
+.ch-card.c3 .ch-title { color:var(--yellow); }
+.ch-items { display:flex; flex-direction:column; }
+.ch-item { display:flex; align-items:flex-start; gap:10px; padding:9px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.ch-item:last-child { border-bottom:none; }
+.ch-dot { width:5px; height:5px; border-radius:50%; flex-shrink:0; margin-top:7px; }
+.ch-card.c1 .ch-dot { background:var(--fuchsia); }
+.ch-card.c2 .ch-dot { background:var(--purple-light); }
+.ch-card.c3 .ch-dot { background:var(--yellow); }
+.ch-text { font-size:15px; line-height:1.6; color:rgba(240,238,232,.65); }
+.ch-bottom { grid-column:1/-1; background:rgba(123,79,255,.1); border-top:1px solid rgba(123,79,255,.2); padding:18px 26px; display:flex; align-items:center; gap:16px; }
+.ch-bottom-lbl { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.25em; text-transform:uppercase; color:var(--purple-light); flex-shrink:0; }
+.ch-bottom-txt { font-size:15px; color:rgba(240,238,232,.6); line-height:1.4; }
+
+/* ════════════════════════════════
+   PANEL 4 — ROLE / HOW IT WORKS
+════════════════════════════════ */
+.panel-role { background:var(--black); }
+.role-outer { width:100%; height:100%; display:grid; grid-template-columns:340px 1fr; }
+.role-left { padding:80px 44px; display:flex; flex-direction:column; justify-content:center; border-right:1px solid rgba(255,255,255,.06); background:var(--dark); }
+.role-headline { font-family:'Bebas Neue',cursive; font-size:clamp(36px,4.5vw,62px); line-height:.95; letter-spacing:.02em; margin-bottom:16px; }
+.role-headline em { color:var(--purple); font-style:normal; }
+.role-tagline { font-size:18px; font-weight:700; color:var(--white); line-height:1.4; margin-bottom:12px; }
+.role-sub { font-size:16px; line-height:1.75; color:rgba(240,238,232,.45); margin-bottom:24px; }
+.role-badge { display:inline-flex; align-items:center; gap:10px; background:rgba(123,79,255,.15); border:1px solid rgba(123,79,255,.3); padding:12px 18px; }
+.role-badge strong { font-family:'Bebas Neue',cursive; font-size:20px; color:var(--yellow); }
+.role-badge span { font-size:14px; color:rgba(255,255,255,.6); }
+.role-right { padding:60px; display:grid; grid-template-columns:1fr 1fr; grid-template-rows:1fr 1fr; gap:1px; background:rgba(255,255,255,.05); }
+.role-card { background:var(--black); padding:36px 32px; display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden; transition:background .4s; }
+.role-card:hover { background:rgba(123,79,255,.07); }
+.role-card::after { content:''; position:absolute; bottom:0; left:0; height:3px; width:0; background:linear-gradient(90deg,var(--purple),var(--yellow)); transition:width .4s ease; }
+.role-card:hover::after { width:100%; }
+.role-num { font-family:'Bebas Neue',cursive; font-size:13px; letter-spacing:.15em; color:var(--purple); }
+.role-title { font-family:'Bebas Neue',cursive; font-size:clamp(30px,3.2vw,46px); line-height:1; color:var(--white); }
+.role-items { display:flex; flex-direction:column; margin-top:auto; }
+.role-item { display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.role-item:last-child { border-bottom:none; }
+.role-arr { font-family:'DM Mono',monospace; font-size:11px; color:var(--purple); flex-shrink:0; }
+.role-txt { font-size:15px; line-height:1.5; color:rgba(240,238,232,.6); }
+
+/* ════════════════════════════════
+   PANEL 5 — METHOD STEPS
+════════════════════════════════ */
+.panel-method { background:var(--black); }
+.method-inner { width:100%; padding:0 80px; display:grid; grid-template-columns:1fr 1fr; gap:80px; align-items:center; }
+.method-eyebrow { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.4em; color:var(--yellow); text-transform:uppercase; margin-bottom:20px; }
+.method-headline { font-family:'Bebas Neue',cursive; font-size:clamp(44px,6vw,80px); line-height:.95; margin-bottom:28px; }
+.method-headline .wh { color:var(--purple); }
+.method-body { font-size:18px; color:rgba(240,238,232,.6); line-height:1.8; }
+.method-steps { display:flex; flex-direction:column; gap:0; }
+.method-step { display:flex; align-items:flex-start; gap:20px; padding:28px 0; border-bottom:1px solid rgba(255,255,255,.06); }
+.method-step:last-child { border-bottom:none; }
+.ms-icon { width:44px; height:44px; flex-shrink:0; display:flex; align-items:center; justify-content:center; border:1px solid rgba(123,79,255,.3); }
+.ms-icon svg { width:20px; height:20px; stroke:var(--purple-light); fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+.ms-content {}
+.ms-title { font-family:'Bebas Neue',cursive; font-size:22px; letter-spacing:.04em; color:var(--white); margin-bottom:6px; }
+.ms-desc { font-size:16px; color:rgba(240,238,232,.5); line-height:1.7; }
+
+/* ════════════════════════════════
+   PANEL 6 — WHITE PROCESS
+════════════════════════════════ */
+.panel-white-process { background:#f5f5f0; color:#050505; }
+.wpr-inner { max-width:1200px; width:100%; padding:0 80px; }
+.wpr-label { font-family:'DM Mono',monospace; font-size:10px; font-weight:700; letter-spacing:.4em; text-transform:uppercase; color:var(--purple); margin-bottom:24px; }
+.wpr-label::before { content:''; display:inline-block; width:24px; height:1px; background:var(--purple); margin-right:12px; vertical-align:middle; }
+.wpr-title { font-family:'Bebas Neue',cursive; font-size:clamp(3rem,5vw,4.5rem); line-height:.95; color:#050505; margin-bottom:80px; max-width:600px; }
+.wpr-steps { display:grid; grid-template-columns:repeat(4,1fr); gap:0; position:relative; }
+.wpr-steps::before { content:''; position:absolute; top:16px; left:0; right:0; height:1px; background:linear-gradient(90deg,var(--purple),var(--fuchsia)); z-index:0; }
+.wpr-step { padding:0 40px 0 0; position:relative; z-index:1; }
+.wpr-dot { width:16px; height:16px; background:var(--purple); border-radius:50%; margin-bottom:32px; border:3px solid #f5f5f0; box-shadow:0 0 0 2px var(--purple); transition:transform .3s; }
+.wpr-step:hover .wpr-dot { transform:scale(1.4); background:var(--yellow); }
+.wpr-num { font-family:'Bebas Neue',cursive; font-size:3rem; color:rgba(107,78,255,.2); line-height:1; margin-bottom:8px; }
+.wpr-name { font-family:'Syne',sans-serif; font-size:1.2rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#050505; margin-bottom:12px; }
+.wpr-desc { font-size:.95rem; line-height:1.7; color:rgba(5,5,5,.6); }
+
+/* ════════════════════════════════
+   PANEL 7 — TIMELINE
+════════════════════════════════ */
+.panel-timeline { background:var(--dark); }
+.timeline-outer { width:100%; padding:0 60px; }
+.tl-header { text-align:center; margin-bottom:60px; }
+.tl-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.4em; color:var(--yellow); text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; justify-content:center; gap:12px; }
+.tl-label::before { content:''; display:inline-block; width:24px; height:1px; background:var(--yellow); }
+.tl-headline { font-family:'Bebas Neue',cursive; font-size:clamp(40px,5vw,72px); line-height:.95; }
+.tl-headline .hl { color:var(--yellow); }
+.timeline-row { display:grid; grid-auto-columns:1fr; grid-auto-flow:column; gap:1px; background:rgba(255,255,255,.05); }
+.tl-cell { background:var(--dark); padding:32px 24px; position:relative; }
+.tl-cell.key { background:rgba(123,79,255,.12); }
+.tl-date { font-family:'Bebas Neue',cursive; font-size:22px; color:var(--yellow); margin-bottom:10px; }
+.tl-milestone { font-size:15px; font-weight:700; color:var(--white); line-height:1.4; margin-bottom:8px; }
+.tl-note { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.15em; text-transform:uppercase; color:rgba(255,255,255,.3); }
+
+/* ════════════════════════════════
+   PANEL 8 — NEXT STEPS / NOTES
+════════════════════════════════ */
+.panel-notes { background:#060610; }
+.notes-outer { width:100%; padding:0 80px; display:grid; grid-template-columns:1fr 1fr; gap:60px; align-items:start; }
+.notes-headline { font-family:'Bebas Neue',cursive; font-size:clamp(40px,5vw,72px); line-height:.95; grid-column:1/-1; margin-bottom:40px; }
+.notes-headline .hl { color:var(--fuchsia); }
+.col-title { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.3em; text-transform:uppercase; color:rgba(255,255,255,.3); margin-bottom:16px; padding-bottom:12px; border-bottom:1px solid rgba(255,255,255,.06); }
+.alert-item { display:flex; align-items:flex-start; gap:16px; padding:16px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.alert-icon { font-family:'DM Mono',monospace; font-size:10px; width:32px; flex-shrink:0; margin-top:2px; }
+.alert-item.fuchsia .alert-icon { color:var(--fuchsia); }
+.alert-item.purple .alert-icon { color:var(--purple-light); }
+.alert-item.yellow .alert-icon { color:var(--yellow); }
+.alert-text { font-size:16px; line-height:1.7; color:rgba(240,238,232,.7); }
+.alert-text strong { display:block; margin-bottom:2px; }
+.alert-item.fuchsia .alert-text strong { color:var(--fuchsia); }
+.alert-item.purple .alert-text strong { color:var(--purple-light); }
+.alert-item.yellow .alert-text strong { color:var(--yellow); }
+.action-item { display:grid; grid-template-columns:100px 1fr; gap:16px; padding:16px 0; border-bottom:1px solid rgba(255,255,255,.05); }
+.action-who { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--yellow); padding-top:2px; line-height:1.5; }
+.action-what { font-size:16px; line-height:1.7; color:rgba(240,238,232,.65); }
+
+/* ════════════════════════════════
+   PANEL 9 — CLOSE / CTA
+════════════════════════════════ */
+.panel-close { background:var(--dark); }
+.close-bg { position:absolute; inset:0; background:radial-gradient(ellipse at center,rgba(123,79,255,.2) 0%,transparent 60%); }
+.close-grid-bg { position:absolute; inset:0; background-image:linear-gradient(rgba(123,79,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(123,79,255,.04) 1px,transparent 1px); background-size:80px 80px; animation:gridMove 20s linear infinite; }
+.close-inner { position:relative; z-index:2; text-align:center; max-width:800px; padding:0 60px; }
+.close-eyebrow { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.3em; color:rgba(255,255,255,.3); text-transform:uppercase; margin-bottom:32px; display:block; }
+.close-headline { font-family:'Bebas Neue',cursive; font-size:clamp(64px,11vw,140px); line-height:.92; margin-bottom:32px; }
+.close-headline .hl-y { color:var(--yellow); }
+.close-headline .hl-p { color:var(--purple); }
+.close-quote { font-size:16px; font-style:italic; line-height:1.7; color:rgba(240,238,232,.55); max-width:600px; margin:0 auto 40px; }
+.close-tags { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-bottom:48px; }
+.close-foot { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.2em; color:rgba(255,255,255,.2); text-transform:uppercase; }
+</style>
+</head>
+<body>
+
+<!-- Custom cursor -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-follower" id="cursor-follower"></div>
+
+<!-- Preloader -->
+<div id="preloader">
+  <div class="pl-logo">HAVAS PLAY</div>
+  <div class="pl-bar"><div class="pl-progress"></div></div>
+  <div class="pl-sub">Loading</div>
+</div>
+
+<!-- Progress bar -->
+<div id="progress-bar"></div>
+
+<!-- Nav -->
+<nav>
+  <a class="nav-logo" href="#">HAVAS <span>PLAY</span></a>
+  <div class="nav-right">
+    <div class="nav-label" id="navLabel">01 / 11</div>
+    <div class="nav-dots" id="navDots"></div>
+  </div>
+</nav>
+
+<!-- Scroll hint -->
+<div id="scroll-hint">
+  <span class="hint-text">Scroll</span>
+  <div class="hint-arrow"><span></span><span></span></div>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<div id="scroll-container">
+<div id="panels-wrapper">
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 0 — COVER
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-cover" data-panel="0">
+  <div class="cover-grid"></div>
+  <div class="cover-orb"></div>
+  <div class="cover-content">
+    <div class="cover-eyebrow">Havas Play × Amazon × Telefónica — Gaming Innovation</div>
+    <h1 class="cover-headline">
+      Play<br>
+      <span class="hl-purple">The</span><br>
+      <span class="hl-yellow">Brief</span>
+    </h1>
+    <div class="cover-meta">
+      <div class="cover-meta-item">Format<strong>Creative Hackathon</strong></div>
+      <div class="cover-meta-sep"></div>
+      <div class="cover-meta-item">Platform<strong>Twitch / Amazon</strong></div>
+      <div class="cover-meta-sep"></div>
+      <div class="cover-meta-item">Location<strong>Madrid</strong></div>
+      <div class="cover-meta-sep"></div>
+      <div class="cover-meta-item">Target<strong>June 2025</strong></div>
+    </div>
+    <div class="cover-badges">
+      <span class="cover-badge">Gaming First</span>
+      <span class="cover-badge">3 Teams / 4 Countries</span>
+      <span class="cover-badge">Live Production</span>
+      <span class="cover-badge">Pilot Edition</span>
+    </div>
+  </div>
+  <div class="cover-scroll-cta" onclick="scrollToPanel(1)">
+    <div class="cover-scroll-line"></div>
+    <span>Begin</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 1 — CONTEXT: THE PROBLEM
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-context" data-panel="1">
+  <div class="context-split">
+    <div class="context-left">
+      <div class="ctx-stat reveal-el">
+        <span class="ctx-big">3.4</span>
+        <span class="ctx-unit">Billion</span>
+        <div class="ctx-lbl">Gamers worldwide</div>
+        <div class="stat-row">
+          <div class="stat-pill">
+            <span class="stat-pill-val">#1</span>
+            <span class="stat-pill-lbl">Entertainment<br>category</span>
+          </div>
+          <div class="stat-pill">
+            <span class="stat-pill-val">40%</span>
+            <span class="stat-pill-lbl">Higher<br>engagement</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="context-right">
+      <div class="ctx-block">
+        <div class="panel-label reveal-el">01 — Context</div>
+        <h2 class="ctx-headline reveal-el">Gaming es<br><em>masivo.</em><br>Pero lo tratamos<br>como nicho.</h2>
+        <p class="ctx-body reveal-el">El gaming es el mayor campo de entretenimiento del mundo. Los datos de engagement superan a cualquier otra disciplina. Y sin embargo, los creativos no lo activan y los clientes lo subestiman.</p>
+        <div class="arrow-stmt reveal-el">No es un problema de audiencia.<br><span>Es un problema de cultura interna.</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 2 — QUOTE
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-quote" data-panel="2">
+  <div class="quote-grid"></div>
+  <div class="quote-orb"></div>
+  <div class="quote-inner">
+    <span class="quote-mark reveal-el">"</span>
+    <p class="quote-text reveal-el">
+      No necesitamos más inspiración. <br>Necesitamos más acción.<br><br>
+      <span class="hl-yellow">Sin presión real, <br>no hay ideas reales.</span>
+    </p>
+    <div class="quote-divider reveal-el"></div>
+    <div class="quote-attribution reveal-el">Gaming no falla. Lo que falla es cómo lo estamos activando.</div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 3 — CHALLENGE CARDS: LAS DOS BARRERAS
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-challenge" data-panel="3">
+  <div class="ch-outer">
+    <div class="ch-left">
+      <div class="panel-label reveal-el">02 — El Reto</div>
+      <h2 class="ch-headline reveal-el">Dos<br><em>barreras.</em><br>Un mismo<br>problema.</h2>
+      <p class="ch-sub reveal-el">Hemos identificado los dos frenos que impiden que el gaming escale, tanto dentro de nuestros equipos como en nuestros clientes.</p>
+      <div class="ch-note reveal-el">Ambas barreras se refuerzan mutuamente. Hay que atacar las dos a la vez.</div>
+    </div>
+    <div class="ch-right" style="grid-template-columns:1fr 1fr;">
+      <div class="ch-card c1 reveal-el">
+        <div class="ch-num">01</div>
+        <div class="ch-title">Equipos</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Los creativos van desbordados con sus disciplinas habituales</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">El gaming no forma parte de su toolkit creativo cotidiano</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Falta exposición práctica al entorno Twitch y gaming live</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">No hay momentos dedicados para explorar nuevos formatos</span></div>
+        </div>
+      </div>
+      <div class="ch-card c2 reveal-el">
+        <div class="ch-num">02</div>
+        <div class="ch-title">Clientes</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Perciben el gaming como acción de nicho o cualitativa</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Desconocen el alcance real y los KPIs de engagement</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Baja confianza en la efectividad de Twitch como plataforma</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">No ven ideas concretas y ejecutables a corto plazo</span></div>
+        </div>
+      </div>
+      <div class="ch-bottom reveal-el">
+        <div class="ch-bottom-lbl">Consecuencia</div>
+        <div class="ch-bottom-txt">El gaming queda fuera de los planes estratégicos de los clientes y fuera de la agenda creativa de los equipos. Una oportunidad masiva, sin explotar.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 4 — LA OPORTUNIDAD (CONTEXT SPLIT)
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-context" data-panel="4">
+  <div class="context-split" style="grid-template-columns:320px 1fr;">
+    <div class="context-left">
+      <div class="ctx-stat reveal-el">
+        <span class="ctx-big">3</span>
+        <span class="ctx-unit">Campañas</span>
+        <div class="ctx-lbl">Twitch-first desarrolladas</div>
+        <div class="stat-row" style="flex-direction:column; gap:12px; margin-top:28px;">
+          <div class="stat-pill" style="width:100%;">
+            <span class="stat-pill-val">1</span>
+            <span class="stat-pill-lbl">Producida y activada</span>
+          </div>
+          <div class="stat-pill" style="width:100%;">
+            <span class="stat-pill-val">+%</span>
+            <span class="stat-pill-lbl">Media budget de Amazon</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="context-right" style="padding:60px 56px;">
+      <div class="ctx-block" style="max-width:720px;">
+        <div class="panel-label reveal-el">03 — La Hakaton</div>
+        <h2 class="ctx-headline reveal-el" style="font-size:clamp(32px,3.8vw,56px); margin-bottom:16px;">Una nueva forma de<br><em>activar propuestas.</em></h2>
+        <div class="arrow-stmt reveal-el" style="margin-bottom:28px; font-size:clamp(14px,1.6vw,20px);">No es un ejercicio creativo.<br><span>Es una campaña real, lista para activarse.</span></div>
+        <div class="hak-cards reveal-el" style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+          <div class="hak-card" style="background:rgba(200,23,122,.08); border:1px solid rgba(200,23,122,.25); border-radius:4px; padding:20px 22px;">
+            <div style="font-family:'Bebas Neue',cursive; font-size:16px; letter-spacing:.08em; color:var(--fuchsia); margin-bottom:14px;">Lo que NO es</div>
+            <div class="hak-item" style="display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid rgba(200,23,122,.12);">
+              <span style="color:var(--fuchsia); font-size:10px; margin-top:5px; flex-shrink:0;">●</span>
+              <span style="font-size:15px; line-height:1.55; color:rgba(240,238,232,.7);">Una sesión de inspiración general</span>
+            </div>
+            <div class="hak-item" style="display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid rgba(200,23,122,.12);">
+              <span style="color:var(--fuchsia); font-size:10px; margin-top:5px; flex-shrink:0;">●</span>
+              <span style="font-size:15px; line-height:1.55; color:rgba(240,238,232,.7);">Exploración teórica sin límites ni consecuencias</span>
+            </div>
+            <div class="hak-item" style="display:flex; align-items:flex-start; gap:10px; padding:7px 0;">
+              <span style="color:var(--fuchsia); font-size:10px; margin-top:5px; flex-shrink:0;">●</span>
+              <span style="font-size:15px; line-height:1.55; color:rgba(240,238,232,.7);">Innovation theatre sin impacto real en el negocio</span>
+            </div>
+          </div>
+          <div class="hak-card" style="background:rgba(123,79,255,.08); border:1px solid rgba(123,79,255,.25); border-radius:4px; padding:20px 22px;">
+            <div style="font-family:'Bebas Neue',cursive; font-size:16px; letter-spacing:.08em; color:var(--yellow); margin-bottom:14px;">Lo que SÍ es</div>
+            <div class="hak-item" style="display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid rgba(123,79,255,.12);">
+              <span style="color:var(--yellow); font-size:10px; margin-top:5px; flex-shrink:0;">●</span>
+              <span style="font-size:15px; line-height:1.55; color:rgba(240,238,232,.7);">Un sprint creativo sobre un brief real de Telefónica</span>
+            </div>
+            <div class="hak-item" style="display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px solid rgba(123,79,255,.12);">
+              <span style="color:var(--yellow); font-size:10px; margin-top:5px; flex-shrink:0;">●</span>
+              <span style="font-size:15px; line-height:1.55; color:rgba(240,238,232,.7);">Generación de campaña con presión, foco y deadlines reales</span>
+            </div>
+            <div class="hak-item" style="display:flex; align-items:flex-start; gap:10px; padding:7px 0;">
+              <span style="color:var(--yellow); font-size:10px; margin-top:5px; flex-shrink:0;">●</span>
+              <span style="font-size:15px; line-height:1.55; color:rgba(240,238,232,.7);">Output production-ready con relevancia directa para el negocio</span>
+            </div>
+          </div>
+        </div>
+        <div class="alert-box reveal-el" style="background:rgba(245,230,66,.06); border-color:rgba(245,230,66,.2); border-left-color:var(--yellow);">
+          <p style="color:rgba(240,238,232,.8);">Immediate output over <strong style="color:var(--yellow);">abstract innovation.</strong></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 5 — PLAY THE BRIEF (CHALLENGE TEMPLATE)
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-challenge" data-panel="5">
+  <div class="ch-outer">
+    <div class="ch-left">
+      <div class="panel-label reveal-el">04 — El Formato</div>
+      <h2 class="ch-headline reveal-el">Play<br><em>The</em><br>Brief.</h2>
+      <p class="ch-sub reveal-el">Un brief real. Tres equipos internacionales en competición. 1.5 días para crear y producir una campaña Twitch-first.</p>
+      <div class="ch-note reveal-el">El hackathon no es formación. Es producción real bajo presión real.</div>
+    </div>
+    <div class="ch-right" style="grid-template-columns:1fr 1fr 1fr;">
+      <div class="ch-card c1 reveal-el">
+        <div class="ch-num">01</div>
+        <div class="ch-title">El Brief</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Brief real de Telefónica, cliente con fit natural en gaming y Twitch</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Plataforma Twitch como canal principal de la campaña</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Parámetros de producción y presupuesto definidos desde el inicio</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Sesión de onboarding con Amazon para contextualizar el ecosistema</span></div>
+        </div>
+      </div>
+      <div class="ch-card c2 reveal-el">
+        <div class="ch-num">02</div>
+        <div class="ch-title">Los Equipos</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">3 equipos Havas Play: España, Alemania, Francia y UK</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Talent mix: estrategas, creativos y specialists de gaming</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Competición interna con incentivos para el equipo ganador</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Crédito de campaña + prizes gaming/Twitch para el ganador</span></div>
+        </div>
+      </div>
+      <div class="ch-card c3 reveal-el">
+        <div class="ch-num">03</div>
+        <div class="ch-title">El Resultado</div>
+        <div class="ch-items">
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Tres campañas Twitch-first completas y modulares</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Pitch ante jurado: Telefónica, Havas Play leadership y Amazon</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Campaña ganadora producida y activada en Twitch</span></div>
+          <div class="ch-item"><div class="ch-dot"></div><span class="ch-text">Media budget adicional aportado por Amazon a la ganadora</span></div>
+        </div>
+      </div>
+      <div class="ch-bottom reveal-el">
+        <div class="ch-bottom-lbl">Formato replicable</div>
+        <div class="ch-bottom-txt">Una vez probado el modelo, el hackathon se exporta a otros países y clientes dentro de la red Havas Play global.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 6 — EL EVENTO (METHOD STEPS)
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-method" data-panel="6">
+  <div class="method-inner">
+    <div>
+      <div class="panel-label reveal-el">05 — El Evento</div>
+      <h2 class="method-headline reveal-el">Madrid.<br><span class="wh">Distrito</span><br>Telefónica.</h2>
+      <p class="method-body reveal-el">1.5 días intensivos en las instalaciones de Telefónica en Madrid. Creación, pitching y decisión del jurado en un único sprint creativo.</p>
+    </div>
+    <div class="method-steps">
+      <div class="method-step reveal-el">
+        <div class="ms-icon">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div class="ms-content">
+          <div class="ms-title">Día 1 — Mañana: Brief &amp; Inmersión</div>
+          <div class="ms-desc">Presentación del brief de Telefónica. Sesión de onboarding en el ecosistema Twitch con Amazon. Los tres equipos reciben el briefing simultáneamente y arrancan.</div>
+        </div>
+      </div>
+      <div class="method-step reveal-el">
+        <div class="ms-icon">
+          <svg viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </div>
+        <div class="ms-content">
+          <div class="ms-title">Día 1 — Tarde: Sprint Creativo</div>
+          <div class="ms-desc">Los equipos trabajan en paralelo durante toda la tarde. Deadline de entregables al final de la jornada. Foco total en construir la campaña Twitch-first.</div>
+        </div>
+      </div>
+      <div class="method-step reveal-el">
+        <div class="ms-icon">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        </div>
+        <div class="ms-content">
+          <div class="ms-title">Día 2 — Pitches &amp; Jurado</div>
+          <div class="ms-desc">Los tres equipos presentan al jurado: Telefónica, Havas Play leadership y Amazon. Decisión y anuncio del ganador en directo.</div>
+        </div>
+      </div>
+      <div class="method-step reveal-el">
+        <div class="ms-icon">
+          <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        </div>
+        <div class="ms-content">
+          <div class="ms-title">Post-evento: Producción &amp; Activación</div>
+          <div class="ms-desc">La campaña ganadora entra en producción inmediatamente, con budget comprometido. Activación en Twitch con el media boost de Amazon.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 7 — WHITE PROCESS: VALOR PARA EL CLIENTE
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-white-process" data-panel="7">
+  <div class="wpr-inner">
+    <div class="wpr-label reveal-el">06 — Valor para Telefónica</div>
+    <h2 class="wpr-title reveal-el">Lo que Telefónica recibe</h2>
+    <div class="wpr-steps">
+      <div class="wpr-step reveal-el">
+        <div class="wpr-dot"></div>
+        <div class="wpr-num">01</div>
+        <div class="wpr-name">3 Campañas Completas</div>
+        <p class="wpr-desc">Tres conceptos de campaña Twitch-first completamente desarrollados, modulares y listos para evaluación y producción.</p>
+      </div>
+      <div class="wpr-step reveal-el">
+        <div class="wpr-dot"></div>
+        <div class="wpr-num">02</div>
+        <div class="wpr-name">1 Campaña Producida</div>
+        <p class="wpr-desc">La campaña ganadora se activa en Twitch con presupuesto comprometido desde el inicio. Sin fricción de aprobaciones posteriores.</p>
+      </div>
+      <div class="wpr-step reveal-el">
+        <div class="wpr-dot"></div>
+        <div class="wpr-num">03</div>
+        <div class="wpr-name">Media Budget Extra</div>
+        <p class="wpr-desc">Amazon Ads co-invierte añadiendo un porcentaje adicional de media budget gratuito a la campaña ganadora.</p>
+      </div>
+      <div class="wpr-step reveal-el">
+        <div class="wpr-dot"></div>
+        <div class="wpr-num">04</div>
+        <div class="wpr-name">Modelo Replicable</div>
+        <p class="wpr-desc">Formato exportable a otros países y marcas del portfolio. Telefónica como partner pionero del modelo a nivel global.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 8 — TIMELINE
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-timeline" data-panel="8">
+  <div class="timeline-outer">
+    <div class="tl-header">
+      <div class="tl-label reveal-el">07 — Roadmap</div>
+      <h2 class="tl-headline reveal-el">De la aprobación a la <span class="hl">activación</span></h2>
+    </div>
+    <div class="timeline-row">
+      <div class="tl-cell reveal-el">
+        <div class="tl-date">Ahora</div>
+        <div class="tl-milestone">Aprobación interna</div>
+        <div class="tl-note">Jorge & Renata sign-off</div>
+      </div>
+      <div class="tl-cell reveal-el">
+        <div class="tl-date">Mayo</div>
+        <div class="tl-milestone">Aprobación cliente</div>
+        <div class="tl-note">Telefónica green light + brief kick-off</div>
+      </div>
+      <div class="tl-cell key reveal-el">
+        <div class="tl-date">Junio</div>
+        <div class="tl-milestone">Play The Brief — Evento</div>
+        <div class="tl-note">Madrid · Distrito Telefónica · 1.5 días</div>
+      </div>
+      <div class="tl-cell reveal-el">
+        <div class="tl-date">Julio</div>
+        <div class="tl-milestone">Producción campaña</div>
+        <div class="tl-note">Ganadora en producción inmediata</div>
+      </div>
+      <div class="tl-cell reveal-el">
+        <div class="tl-date">Q3 2025</div>
+        <div class="tl-milestone">Activación en Twitch</div>
+        <div class="tl-note">Live + media boost Amazon Ads</div>
+      </div>
+      <div class="tl-cell reveal-el">
+        <div class="tl-date">Post-evento</div>
+        <div class="tl-milestone">Rollout global</div>
+        <div class="tl-note">Expansión a otros países y clientes</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 9 — NEXT STEPS
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-notes" data-panel="9">
+  <div class="notes-outer">
+    <h2 class="notes-headline reveal-el">Next <span class="hl">Steps</span></h2>
+    <div>
+      <div class="col-title reveal-el">Lo que necesitamos validar</div>
+      <div class="alert-item fuchsia reveal-el">
+        <div class="alert-icon">01</div>
+        <div class="alert-text">
+          <strong>Aprobación del formato</strong>
+          Confirmar el concepto Play The Brief como iniciativa oficial de Havas Play para 2025.
+        </div>
+      </div>
+      <div class="alert-item purple reveal-el">
+        <div class="alert-icon">02</div>
+        <div class="alert-text">
+          <strong>Briefing de Telefónica</strong>
+          Alinear con el equipo de cliente el brief real que servirá de base para el hackathon.
+        </div>
+      </div>
+      <div class="alert-item yellow reveal-el">
+        <div class="alert-icon">03</div>
+        <div class="alert-text">
+          <strong>Compromiso de presupuesto</strong>
+          Confirmar el budget de producción para la campaña ganadora antes del lanzamiento del evento.
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="col-title reveal-el">Siguientes acciones</div>
+      <div class="action-item reveal-el">
+        <div class="action-who">Havas Play<br>Leadership</div>
+        <div class="action-what">Aprobación interna del proyecto por parte de Jorge y Renata para proceder con el cliente.</div>
+      </div>
+      <div class="action-item reveal-el">
+        <div class="action-who">Telefónica</div>
+        <div class="action-what">Validación del concepto y alineamiento en brief, fecha y disponibilidad del espacio en Distrito Telefónica.</div>
+      </div>
+      <div class="action-item reveal-el">
+        <div class="action-who">Amazon</div>
+        <div class="action-what">Confirmar co-inversión en media budget y participación en el jurado del evento en Madrid.</div>
+      </div>
+      <div class="action-item reveal-el">
+        <div class="action-who">Post-evento</div>
+        <div class="action-what">Documentar el formato, recoger feedback y diseñar el plan de rollout a otros mercados.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════
+     PANEL 10 — CLOSE
+══════════════════════════════════════════════════════════ -->
+<div class="panel panel-close" data-panel="10">
+  <div class="close-bg"></div>
+  <div class="close-grid-bg"></div>
+  <div class="close-inner">
+    <span class="close-eyebrow reveal-el">Havas Play × Amazon × Telefónica</span>
+    <h2 class="close-headline reveal-el">Let's<br><span class="hl-p">Play</span><br><span class="hl-y">The Brief</span></h2>
+    <p class="close-quote reveal-el">Un brief real. Tres equipos. Una campaña producida. El modelo que cambia cómo la industria entiende el gaming.</p>
+    <div class="close-tags reveal-el">
+      <span class="tag">Gaming First</span>
+      <span class="tag fuchsia">Twitch × Amazon</span>
+      <span class="tag yellow">Madrid · Junio 2025</span>
+      <span class="tag">Havas Play Global</span>
+    </div>
+    <div class="close-foot reveal-el">havasplay.com — Confidential. For internal and client review only.</div>
+  </div>
+</div>
+
+</div><!-- /panels-wrapper -->
+</div><!-- /scroll-container -->
+
+<script>
+// Cursor
+const cursor = document.getElementById('cursor');
+const follower = document.getElementById('cursor-follower');
+let mouseX=0,mouseY=0,followerX=0,followerY=0;
+document.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;cursor.style.left=mouseX+'px';cursor.style.top=mouseY+'px';});
+(function animateCursor(){followerX+=(mouseX-followerX)*.12;followerY+=(mouseY-followerY)*.12;follower.style.left=followerX+'px';follower.style.top=followerY+'px';requestAnimationFrame(animateCursor);})();
+
+// Preloader
+window.addEventListener('load',()=>setTimeout(()=>document.getElementById('preloader').classList.add('hidden'),2600));
+
+// ═══════════════════════════════════════
+// SCROLL ENGINE
+// ═══════════════════════════════════════
+const PANEL_COUNT = 11;
+
+const navDots = document.getElementById('navDots');
+for(let i=0;i<PANEL_COUNT;i++){
+  const d=document.createElement('div');
+  d.className='nav-dot'+(i===0?' active':'');
+  d.addEventListener('click',()=>scrollToPanel(i));
+  navDots.appendChild(d);
+}
+
+const wrapper = document.getElementById('panels-wrapper');
+const progressBar = document.getElementById('progress-bar');
+const scrollHint = document.getElementById('scroll-hint');
+const navLabel = document.getElementById('navLabel');
+
+let currentPanel=0, isScrolling=false, targetX=0, currentX=0;
+
+function scrollToPanel(index){
+  if(index<0||index>=PANEL_COUNT||isScrolling)return;
+  currentPanel=index;
+  targetX=index*window.innerWidth;
+  updateUI();
+  animateScroll();
+}
+
+function easeInOutCubic(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;}
+
+function animateScroll(){
+  isScrolling=true;
+  const startX=currentX,startTime=performance.now();
+  function step(now){
+    const p=Math.min((now-startTime)/900,1);
+    currentX=startX+(targetX-startX)*easeInOutCubic(p);
+    wrapper.style.transform=`translateX(${-currentX}px)`;
+    if(p<1){requestAnimationFrame(step);}
+    else{currentX=targetX;isScrolling=false;triggerReveal(currentPanel);}
+  }
+  requestAnimationFrame(step);
+}
+
+function updateUI(){
+  const pct=(currentPanel/(PANEL_COUNT-1))*100;
+  progressBar.style.width=pct+'%';
+  document.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===currentPanel));
+  scrollHint.classList.toggle('hidden',currentPanel>0);
+  if(navLabel) navLabel.textContent=String(currentPanel+1).padStart(2,'0')+' / '+String(PANEL_COUNT).padStart(2,'0');
+}
+
+function triggerReveal(idx){
+  const panel=document.querySelector(`[data-panel="${idx}"]`);
+  if(!panel)return;
+  panel.querySelectorAll('.reveal-el').forEach((el,i)=>setTimeout(()=>el.classList.add('revealed'),i*70));
+}
+
+// Reveal panel 0 after preloader
+setTimeout(()=>triggerReveal(0),2800);
+
+// Wheel
+let wQueue=0,wTimer=null;
+document.addEventListener('wheel',e=>{
+  e.preventDefault();
+  if(isScrolling)return;
+  clearTimeout(wTimer);
+  wQueue+=e.deltaY;
+  wTimer=setTimeout(()=>{
+    if(Math.abs(wQueue)>30){wQueue>0?scrollToPanel(currentPanel+1):scrollToPanel(currentPanel-1);}
+    wQueue=0;
+  },50);
+},{passive:false});
+
+// Touch
+let touchStartX=0;
+document.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX;});
+document.addEventListener('touchend',e=>{
+  const diff=touchStartX-e.changedTouches[0].clientX;
+  if(Math.abs(diff)>60){diff>0?scrollToPanel(currentPanel+1):scrollToPanel(currentPanel-1);}
+});
+
+// Keyboard
+document.addEventListener('keydown',e=>{
+  if(isScrolling)return;
+  if(e.key==='ArrowRight'||e.key==='ArrowDown')scrollToPanel(currentPanel+1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp')scrollToPanel(currentPanel-1);
+});
+
+// Resize
+window.addEventListener('resize',()=>{
+  targetX=currentPanel*window.innerWidth;
+  currentX=targetX;
+  wrapper.style.transform=`translateX(${-currentX}px)`;
+});
+
+// Init
+updateUI();
+</script>
+</body>
+</html>
