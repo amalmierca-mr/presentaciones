@@ -406,6 +406,59 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 .video-frame-wrap::before { content:''; display:block; padding-top:56.25%; }
 .video-frame-wrap iframe { position:absolute; inset:0; width:100%; height:100%; border:none; border:1px solid rgba(123,79,255,.2); }
 
+
+/* ═══ CULTURAL TRIBES PANEL ═══ */
+.panel-tribes { background: #060610; }
+.tribes-bg { position:absolute; inset:0; background-image:linear-gradient(rgba(123,79,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(123,79,255,.04) 1px,transparent 1px); background-size:80px 80px; animation:gridMove 20s linear infinite; }
+.tribes-orb { position:absolute; width:500px; height:500px; background:radial-gradient(circle,rgba(123,79,255,.1) 0%,transparent 70%); border-radius:50%; top:50%; left:25%; transform:translate(-50%,-50%); animation:orbPulse 6s ease-in-out infinite alternate; }
+.tribes-inner { position:relative; z-index:2; width:100%; height:100%; display:grid; grid-template-columns:260px 1fr; }
+.tribes-left { padding:70px 36px; display:flex; flex-direction:column; justify-content:center; border-right:1px solid rgba(255,255,255,.06); }
+.tribes-eyebrow { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:.4em; color:var(--yellow); text-transform:uppercase; margin-bottom:16px; display:flex; align-items:center; gap:12px; }
+.tribes-eyebrow::before { content:''; display:inline-block; width:24px; height:1px; background:var(--yellow); }
+.tribes-headline { font-family:'Bebas Neue',cursive; font-size:clamp(36px,4vw,60px); line-height:.95; margin-bottom:16px; }
+.tribes-headline em { color:var(--yellow); font-style:normal; }
+.tribes-sub { font-size:15px; line-height:1.75; color:rgba(240,238,232,.45); margin-bottom:28px; }
+.tribes-note { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:.1em; color:var(--purple-light); line-height:1.6; padding:14px 18px; background:rgba(123,79,255,.1); border-left:2px solid var(--purple); }
+.tribes-right { padding:32px 40px; display:flex; align-items:center; overflow:hidden; }
+.tribes-grid { display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(2,1fr); gap:1px; background:rgba(255,255,255,.05); width:100%; height:100%; }
+/* 7 cards — last row has 3 cards, 4th slot empty */
+.tribe-card { background:#060610; padding:22px 20px; display:flex; flex-direction:column; position:relative; overflow:hidden; transition:background .3s; cursor:default; }
+.tribe-card:hover { background:rgba(123,79,255,.08); }
+.tribe-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+.tribe-card.tc-1::before { background:var(--purple); }
+.tribe-card.tc-2::before { background:var(--fuchsia); }
+.tribe-card.tc-3::before { background:linear-gradient(90deg,var(--purple),var(--fuchsia)); }
+.tribe-card.tc-4::before { background:var(--yellow); }
+.tribe-card.tc-5::before { background:var(--fuchsia); }
+.tribe-card.tc-6::before { background:var(--purple-light); }
+.tribe-card.tc-7::before { background:linear-gradient(90deg,var(--yellow),var(--purple)); }
+.tribe-num { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:.2em; margin-bottom:5px; }
+.tc-1 .tribe-num, .tc-3 .tribe-num, .tc-6 .tribe-num { color:var(--purple-light); }
+.tc-2 .tribe-num, .tc-5 .tribe-num { color:var(--fuchsia); }
+.tc-4 .tribe-num, .tc-7 .tribe-num { color:var(--yellow); }
+.tribe-name { font-family:'Bebas Neue',cursive; font-size:clamp(15px,1.6vw,22px); line-height:1; color:var(--white); margin-bottom:4px; }
+.tribe-cross { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.1em; text-transform:uppercase; margin-bottom:10px; }
+.tc-1 .tribe-cross { color:var(--purple-light); }
+.tc-2 .tribe-cross { color:var(--fuchsia); }
+.tc-3 .tribe-cross { color:rgba(157,119,255,.7); }
+.tc-4 .tribe-cross { color:var(--yellow); }
+.tc-5 .tribe-cross { color:var(--fuchsia); }
+.tc-6 .tribe-cross { color:var(--purple-light); }
+.tc-7 .tribe-cross { color:rgba(245,230,66,.7); }
+.tribe-def { font-size:11px; line-height:1.5; color:rgba(240,238,232,.5); margin-bottom:8px; }
+.tribe-signals { display:flex; flex-direction:column; gap:2px; margin-bottom:8px; }
+.tribe-signal { font-size:10px; line-height:1.4; color:rgba(240,238,232,.38); padding-left:10px; position:relative; }
+.tribe-signal::before { content:"·"; position:absolute; left:0; color:rgba(123,79,255,.5); }
+.tc-2 .tribe-signal::before, .tc-5 .tribe-signal::before { color:rgba(200,23,122,.5); }
+.tc-4 .tribe-signal::before, .tc-7 .tribe-signal::before { color:rgba(245,230,66,.4); }
+.tribe-opp-label { font-family:'DM Mono',monospace; font-size:8px; letter-spacing:.2em; text-transform:uppercase; color:rgba(255,255,255,.2); margin-bottom:3px; margin-top:4px; }
+.tribe-opp { font-size:10px; line-height:1.4; color:rgba(240,238,232,.35); padding-left:10px; position:relative; border-top:1px solid rgba(255,255,255,.05); padding-top:6px; }
+.tribe-opp::before { content:"→"; position:absolute; left:0; font-family:'DM Mono',monospace; font-size:9px; color:var(--purple-light); }
+.tc-2 .tribe-opp::before, .tc-5 .tribe-opp::before { color:var(--fuchsia); }
+.tc-4 .tribe-opp::before, .tc-7 .tribe-opp::before { color:var(--yellow); }
+/* Empty slot */
+.tribe-empty { background:rgba(123,79,255,.03); }
+
 </style>
 </head>
 <body>
@@ -423,7 +476,7 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 <nav>
   <a class="nav-logo" href="#">HAVAS <span>PLAY</span></a>
   <div class="nav-right">
-    <div class="nav-label" id="navLabel">01 / 27</div>
+    <div class="nav-label" id="navLabel">01 / 28</div>
     <div class="nav-dots" id="navDots"></div>
   </div>
 </nav>
@@ -1080,7 +1133,135 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 
 
 <!-- ══ NEW C · FROM SPORT TO CULTURAL CONNECTION SYSTEMS ══ -->
-<div class="panel panel-conexion" data-panel="20">
+
+<!-- ══ CULTURAL TRIBES — DECATHLON ══ -->
+<div class="panel panel-tribes" data-panel="20">
+  <div class="tribes-bg"></div>
+  <div class="tribes-orb"></div>
+  <div class="tribes-inner">
+    <div class="tribes-left">
+      <div class="tribes-eyebrow reveal-el">Cultural Tribes</div>
+      <h2 class="tribes-headline reveal-el">7 tribes.<br><em>One</em> opportunity.</h2>
+      <p class="tribes-sub reveal-el">Decathlon's audience is not one person. These are the intersections of sport × lifestyle × motivation where the brand can play a decisive role.</p>
+      <div class="tribes-note reveal-el">Think tribes, not demographics. Each one is a territory.</div>
+    </div>
+    <div class="tribes-right">
+      <div class="tribes-grid">
+
+        <!-- 1. URBAN RUNNERS -->
+        <div class="tribe-card tc-1 reveal-el">
+          <div class="tribe-num">01</div>
+          <div class="tribe-name">Urban Runners</div>
+          <div class="tribe-cross">Running × aesthetics × social</div>
+          <div class="tribe-def">Running as a social excuse and aesthetic identity — not just performance.</div>
+          <div class="tribe-signals">
+            <div class="tribe-signal">Urban run clubs</div>
+            <div class="tribe-signal">Strava as social network</div>
+            <div class="tribe-signal">Outfit matters as much as pace</div>
+          </div>
+          <div class="tribe-opp-label">Decathlon opportunity</div>
+          <div class="tribe-opp">Own clubs · Street aesthetics · Run + café + DJ events</div>
+        </div>
+
+        <!-- 2. HOME ATHLETES -->
+        <div class="tribe-card tc-2 reveal-el">
+          <div class="tribe-num">02</div>
+          <div class="tribe-name">Home Athletes</div>
+          <div class="tribe-cross">Fitness × convenience × technology</div>
+          <div class="tribe-def">Training at home with an optimisation mindset — apps, metrics, modular kit.</div>
+          <div class="tribe-signals">
+            <div class="tribe-signal">Apps, metrics, short routines</div>
+            <div class="tribe-signal">Modular equipment</div>
+            <div class="tribe-signal">Fitness + tech blend</div>
+          </div>
+          <div class="tribe-opp-label">Decathlon opportunity</div>
+          <div class="tribe-opp">Plug &amp; play home packs · App integration · System, not supplier</div>
+        </div>
+
+        <!-- 3. WELLNESS SEEKERS -->
+        <div class="tribe-card tc-3 reveal-el">
+          <div class="tribe-num">03</div>
+          <div class="tribe-name">Wellness Seekers</div>
+          <div class="tribe-cross">Sport × mental health × slow life</div>
+          <div class="tribe-def">Sport as a balance tool, not a performance machine. Calm, natural aesthetic.</div>
+          <div class="tribe-signals">
+            <div class="tribe-signal">Yoga, pilates, mobility</div>
+            <div class="tribe-signal">Breathing, rest, recovery</div>
+            <div class="tribe-signal">Slow, natural aesthetic</div>
+          </div>
+          <div class="tribe-opp-label">Decathlon opportunity</div>
+          <div class="tribe-opp">Expand into wellbeing · Retreats + sessions + community · Product + ritual</div>
+        </div>
+
+        <!-- 4. STYLE DRIVEN ATHLETES -->
+        <div class="tribe-card tc-4 reveal-el">
+          <div class="tribe-num">04</div>
+          <div class="tribe-name">Style Driven</div>
+          <div class="tribe-cross">Sport × fashion × identity</div>
+          <div class="tribe-def">Sport as cultural and aesthetic code. What you wear is who you are.</div>
+          <div class="tribe-signals">
+            <div class="tribe-signal">Athleisure</div>
+            <div class="tribe-signal">Sport-fashion collaborations</div>
+            <div class="tribe-signal">Sport as identity language</div>
+          </div>
+          <div class="tribe-opp-label">Decathlon opportunity</div>
+          <div class="tribe-opp">Unexpected collabs · Aspirational capsule lines · Reposition tennis &amp; outdoor</div>
+        </div>
+
+        <!-- 5. GAMIFIED FITNESS -->
+        <div class="tribe-card tc-5 reveal-el">
+          <div class="tribe-num">05</div>
+          <div class="tribe-name">Gamified Fitness</div>
+          <div class="tribe-cross">Gaming × sport × engagement</div>
+          <div class="tribe-def">Training as if it were a game. Rewards, progression, engagement over discipline.</div>
+          <div class="tribe-signals">
+            <div class="tribe-signal">Zwift, challenges, rankings</div>
+            <div class="tribe-signal">Rewards and progression</div>
+            <div class="tribe-signal">Engagement over discipline</div>
+          </div>
+          <div class="tribe-opp-label">Decathlon opportunity</div>
+          <div class="tribe-opp">Own gamified challenges · Hardware + digital · Season / challenge activations</div>
+        </div>
+
+        <!-- 6. OUTDOOR ESCAPISTS -->
+        <div class="tribe-card tc-6 reveal-el">
+          <div class="tribe-num">06</div>
+          <div class="tribe-name">Outdoor Escapists</div>
+          <div class="tribe-cross">Nature × disconnection × accessible adventure</div>
+          <div class="tribe-def">Nature as escape from urban rhythm. Community + storytelling at the core.</div>
+          <div class="tribe-signals">
+            <div class="tribe-signal">Hiking, camping, trail</div>
+            <div class="tribe-signal">Van life, micro-adventures</div>
+            <div class="tribe-signal">Community + storytelling</div>
+          </div>
+          <div class="tribe-opp-label">Decathlon opportunity</div>
+          <div class="tribe-opp">Lead this territory · Community + routes + content · Experience facilitator</div>
+        </div>
+
+        <!-- 7. BEGINNER MOVERS -->
+        <div class="tribe-card tc-7 reveal-el">
+          <div class="tribe-num">07</div>
+          <div class="tribe-name">Beginner Movers</div>
+          <div class="tribe-cross">First step × accessibility × low barrier</div>
+          <div class="tribe-def">People starting from zero — they need confidence, not pressure.</div>
+          <div class="tribe-signals">
+            <div class="tribe-signal">Anti-elite</div>
+            <div class="tribe-signal">Inclusivity</div>
+            <div class="tribe-signal">Emotional progress &gt; physical</div>
+          </div>
+          <div class="tribe-opp-label">Decathlon opportunity</div>
+          <div class="tribe-opp">Brutal advantage vs Nike/Adidas · Onboarding programmes · "First step" community</div>
+        </div>
+
+        <!-- Empty slot -->
+        <div class="tribe-empty"></div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="panel panel-conexion" data-panel="21">
   <div class="cx-grid"></div>
   <div class="cx-inner">
     <div class="panel-label reveal-el">How Havas Play connects Sport to Culture</div>
@@ -1158,7 +1339,7 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 </div>
 
 <!-- ══ 14 · OUR FRAMEWORK — PLAYBOOK ══ -->
-<div class="panel panel-framework" data-panel="21">
+<div class="panel panel-framework" data-panel="22">
   <div class="fw-grid"></div>
   <div class="fw-outer">
     <div class="fw-left">
@@ -1184,7 +1365,7 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 </div>
 
 <!-- ══ 15 · FROM CAMPAIGNS TO SYSTEMS ══ -->
-<div class="panel panel-white-process" data-panel="22">
+<div class="panel panel-white-process" data-panel="23">
   <div class="wpr-inner">
     <div class="wpr-label reveal-el" style="color:var(--purple);">07 — Systems Thinking</div>
     <h2 class="wpr-title reveal-el" style="color:#050505;">From <span style="color:var(--purple);">campaigns</span> to systems</h2>
@@ -1218,12 +1399,12 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 </div>
 
 <!-- ══ 16 · FINAL THOUGHT ══ -->
-<div class="panel panel-quote" data-panel="23">
+<div class="panel panel-quote" data-panel="24">
   <div class="quote-grid"></div>
   <div class="quote-orb" style="background:radial-gradient(circle,rgba(245,230,66,.08) 0%,transparent 70%);"></div>
   <div class="quote-inner">
     <span class="quote-mark reveal-el">"</span>
-    <p class="quote-text reveal-el">VISIBILITY IS NO LONGER THE PROBLEM <span class="hl-yellow">RELEVANCE IS.</span></p>
+<p class="quote-text reveal-el">VISIBILITY IS NO LONGER THE PROBLEM <span class="hl-yellow">RELEVANCE IS.</span></p>
     <div class="quote-divider reveal-el"></div>
     <div class="quote-attribution reveal-el">Final Thought — Havas Play × Decathlon 2025</div>
   </div>
@@ -1232,7 +1413,7 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 <!-- ══ 17 · NEXT STEP / CLOSE ══ -->
 
 <!-- ══ NEW D · THE JOB IS TWO-FOLD ══ -->
-<div class="panel panel-twofold" data-panel="24">
+<div class="panel panel-twofold" data-panel="25">
   <div class="tf-bg"></div>
   <div class="tf-grid"></div>
   <div class="tf-inner">
@@ -1257,7 +1438,7 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
 
 
 <!-- ══ NEW E · WE BUILD LOCAL PLAYGROUNDS ══ -->
-<div class="panel panel-local" data-panel="25">
+<div class="panel panel-local" data-panel="26">
   <div class="lp-bg"></div>
   <div class="lp-grid"></div>
   <div class="lp-inner">
@@ -1309,7 +1490,7 @@ nav { position:fixed; top:0; left:0; right:0; padding:28px 48px; display:flex; j
   </div>
 </div>
 
-<div class="panel panel-close" data-panel="26">
+<div class="panel panel-close" data-panel="27">
   <div class="close-bg"></div>
   <div class="close-grid-bg"></div>
   <div class="close-inner">
@@ -1336,7 +1517,7 @@ document.addEventListener('mousemove',e=>{mouseX=e.clientX;mouseY=e.clientY;curs
 (function ac(){followerX+=(mouseX-followerX)*.12;followerY+=(mouseY-followerY)*.12;follower.style.left=followerX+'px';follower.style.top=followerY+'px';requestAnimationFrame(ac);})();
 window.addEventListener('load',()=>setTimeout(()=>document.getElementById('preloader').classList.add('hidden'),2600));
 
-const PANEL_COUNT=27;
+const PANEL_COUNT=28;
 const navDots=document.getElementById('navDots');
 for(let i=0;i<PANEL_COUNT;i++){const d=document.createElement('div');d.className='nav-dot'+(i===0?' active':'');d.addEventListener('click',()=>scrollToPanel(i));navDots.appendChild(d);}
 
